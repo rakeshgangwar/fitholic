@@ -11,13 +11,15 @@ from app.core.database import get_db
 from app.schemas.auth import Token
 from app.schemas.user import UserCreate, User
 from app.services.user import authenticate_user, create_user, get_user_by_email
+from app.core.deps import get_current_user
+from app.models.user import User as UserModel
 
 router = APIRouter()
 
 @router.post("/register", response_model=User, status_code=status.HTTP_201_CREATED)
 async def register(
     request: Request,
-    user_in: UserCreate,
+    user_in: UserCreate = Body(...),
     db: Session = Depends(get_db),
 ) -> Any:
     """
@@ -30,19 +32,16 @@ async def register(
             detail="Email already registered",
         )
     user = create_user(db, user_in)
-    return JSONResponse(
-        status_code=status.HTTP_201_CREATED,
-        content={
-            "id": str(user.id),
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "is_active": user.is_active,
-            "is_superuser": user.is_superuser,
-            "created_at": user.created_at.isoformat(),
-            "updated_at": user.updated_at.isoformat()
-        }
-    )
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "is_active": user.is_active,
+        "is_superuser": user.is_superuser,
+        "created_at": user.created_at.isoformat(),
+        "updated_at": user.updated_at.isoformat()
+    }
 
 @router.post("/login", response_model=Token)
 async def login(
@@ -65,5 +64,32 @@ async def login(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     return JSONResponse(
-        content={"access_token": access_token, "token_type": "bearer"}
-    ) 
+        content={
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name
+            }
+        }
+    )
+
+@router.get("/me", response_model=User)
+async def get_me(
+    current_user: UserModel = Depends(get_current_user)
+) -> Any:
+    """
+    Get current user information.
+    """
+    return {
+        "id": str(current_user.id),
+        "email": current_user.email,
+        "first_name": current_user.first_name,
+        "last_name": current_user.last_name,
+        "is_active": current_user.is_active,
+        "is_superuser": current_user.is_superuser,
+        "created_at": current_user.created_at.isoformat(),
+        "updated_at": current_user.updated_at.isoformat()
+    } 

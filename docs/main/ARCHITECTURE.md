@@ -28,7 +28,7 @@ fitholic/
 #### 3.1 Package Management
 - **uv**: Modern Python package manager for fast, reliable dependency management
 - **Poetry**: For dependency management and packaging in Python
-- **pnpm**: For JavaScript/TypeScript package management
+- **npm**: For JavaScript/TypeScript package management
 - **pub**: For Dart/Flutter package management
 
 #### 3.2 Frontend
