@@ -9,9 +9,10 @@
   - CI/CD pipeline setup (GitHub Actions)
   - Project management setup in Jira
 - Initialize cloud infrastructure
-  - Set up Supabase project
-  - Configure authentication
+  - Set up PostgreSQL database
+  - Configure JWT authentication
   - Initialize database schema
+  - Set up AWS S3 for file storage
 - Set up development, staging, and production environments
 
 **2. Core Backend Development**

@@ -4,7 +4,7 @@
 |---|---|---|---|
 | user_id | UUID | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique identifier for each user |
 | email | TEXT | UNIQUE, NOT NULL | User's email address |
-| password | TEXT | NOT NULL | Hashed password (use Supabase Auth for secure storage) |
+| password | TEXT | NOT NULL | Hashed password using bcrypt |
 | first_name | TEXT |  | User's first name |
 | last_name | TEXT |  | User's last name |
 | date_of_birth | DATE |  | User's date of birth |
@@ -113,11 +113,11 @@
 
 **Scalability Considerations:**
 
-* **Horizontal Scaling:** Supabase (built on PostgreSQL) allows for horizontal scaling using read replicas and partitioning.
+* **Horizontal Scaling:** PostgreSQL allows for horizontal scaling using read replicas and partitioning.
 * **Indexing:** Create appropriate indexes on frequently queried columns (e.g., `user_id`, `workout_date`) to improve query performance.
 * **JSONB:**  Using JSONB for flexible data like `dietary_preferences` and `meals` allows for efficient storage and querying of complex data structures.
 * **Arrays:**  Using arrays for `fitness_goals`, `muscle_group`, and `equipment` allows for efficient storage and querying of multiple values.
-* **Supabase Storage:** Store images and videos in Supabase Storage, which is designed for scalability and reliability.
-* **Background Jobs:**  Use Supabase Functions to offload long-running tasks (e.g., video processing, AI inference) to background jobs.
+* **File Storage:** Store images and videos in AWS S3 or similar cloud storage, which is designed for scalability and reliability.
+* **Background Jobs:**  Use Celery with Redis to offload long-running tasks (e.g., video processing, AI inference) to background jobs.
 
 This schema provides a solid foundation for a scalable fitness app. Remember to regularly monitor database performance and optimize as needed as your user base grows.

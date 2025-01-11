@@ -90,7 +90,7 @@
         * Native performance and features
         * Offline capabilities
 * **Backend:**  Cloud-based infrastructure (AWS, Google Cloud, Azure).
-* **Database:**  NoSQL database (MongoDB, Cassandra) for flexibility and scalability.
+* **Database:**  PostgreSQL with extensions for scalability and advanced features.
 * **AI/ML:**  LangGraph for workflow orchestration, LLMs (Gemini Pro) for language processing, and computer vision models (MediaPipe) for form analysis.
 * **API Integrations:**  Recipe APIs (Spoonacular, Edamam), wearable device APIs (Fitbit, Garmin), and potentially payment gateways for premium features.
 

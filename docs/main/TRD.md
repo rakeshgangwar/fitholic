@@ -13,7 +13,7 @@
     * Web: Svelte (primary development focus)
     * Mobile: Flutter (to be developed in phase 2)
 * **Backend:** FastAPI (Python web framework).
-* **Database & Auth:** Supabase (provides PostgreSQL database, authentication, and storage).
+* **Database:** PostgreSQL
 * **AI/ML:**
     * LangChain for interacting with LLMs and managing workflows.
     * Large Language Model (LLM): Gemini Pro (for workout generation, feedback, nutrition planning, motivational messages, content recommendations).
@@ -45,9 +45,9 @@
     * API endpoint development (RESTful API).
     * Business logic implementation.
     * Data processing and validation.
-    * Communication with the database (Supabase).
+    * Communication with PostgreSQL database.
     * Integration with AI/ML models (LangChain, LLMs, computer vision).
-    * Authentication and authorization (using Supabase Auth).
+    * Authentication and authorization.
 * **Considerations:**
     * API security (authentication, authorization, input validation).
     * Scalability to handle increasing user load.
@@ -55,8 +55,8 @@
 
 **5. Database & Authentication**
 
-* **Technology:** Supabase.
-* **Database:** PostgreSQL.
+* **Technology:** PostgreSQL
+* **Database:** PostgreSQL with extensions (e.g., pgvector)
 * **Schema:**
     * **Users:**  user_id, email, password, name, age, gender, fitness_goals, preferences, workout_history, nutrition_data, etc.
     * **Workouts:** workout_id, user_id, date, exercises, sets, reps, weight, feedback, etc.
@@ -64,8 +64,9 @@
     * **Nutrition:**  food_logs, meal_plans, recipes, etc.
     * **Content:** article_id, title, content, category, etc.
 * **Authentication:**
-    * Utilize Supabase Auth for user management, authentication, and authorization.
-    * Implement secure token-based authentication for API access.
+    * Implement JWT-based authentication
+    * Use secure password hashing (e.g., bcrypt)
+    * Implement secure token-based authentication for API access
 
 **6. AI/ML Integration**
 
@@ -96,7 +97,7 @@
     * Web: Deploy to cloud hosting (Vercel/Netlify)
     * Mobile: Deploy to respective app stores (iOS App Store, Google Play Store) in Phase 2
 * **Backend:**  Deploy to a cloud platform (AWS, Google Cloud, Azure) using containerization (Docker) and orchestration (Kubernetes).
-* **Database:**  Utilize Supabase's managed database service.
+* **Database:**  Deploy PostgreSQL on managed service (AWS RDS, Google Cloud SQL, or Azure Database for PostgreSQL)
 
 **9. Testing and Monitoring**
 

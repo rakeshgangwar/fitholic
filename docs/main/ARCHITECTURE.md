@@ -51,15 +51,16 @@ fitholic/
 #### 3.3 Backend
 - **Framework**: FastAPI
 - **API Documentation**: OpenAPI (Swagger)
-- **Authentication**: Supabase Auth
+- **Authentication**: JWT with bcrypt
 - **Testing**: pytest
 - **Task Queue**: Celery with Redis
 - **Caching**: Redis
 
 #### 3.4 Database
-- **Primary Database**: PostgreSQL (via Supabase)
+- **Primary Database**: PostgreSQL
 - **Schema Management**: Alembic migrations
 - **ORM**: SQLAlchemy
+- **Storage**: AWS S3 or similar for file storage
 
 #### 3.5 AI/ML Infrastructure
 - **Workflow Orchestration**: LangChain
@@ -74,7 +75,7 @@ fitholic/
 - **CI/CD**: GitHub Actions
 - **Monitoring**: Prometheus + Grafana
 - **Logging**: ELK Stack
-- **Storage**: S3 for assets, Supabase Storage for user content
+- **Storage**: AWS S3 for assets and user content
 
 ### 4. System Components
 
