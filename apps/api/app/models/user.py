@@ -1,7 +1,7 @@
-from sqlalchemy import Column, String, DateTime, Boolean
+from sqlalchemy import Boolean, Column, String, DateTime
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 import uuid
-from datetime import datetime
 
 from app.core.database import Base
 
@@ -10,10 +10,14 @@ class User(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    first_name = Column(String, nullable=False)
-    last_name = Column(String, nullable=False)
-    is_active = Column(Boolean, default=True)
-    is_superuser = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow) 
+    password = Column(String, nullable=False)
+    first_name = Column(String)
+    last_name = Column(String)
+    is_active = Column(Boolean(), default=True)
+    is_superuser = Column(Boolean(), default=False)
+    created_at = Column(DateTime(timezone=True), server_default='now()')
+    updated_at = Column(DateTime(timezone=True), server_default='now()', onupdate='now()')
+
+    # Add relationships
+    workout_templates = relationship("WorkoutTemplate", back_populates="user")
+    workout_logs = relationship("WorkoutLog", back_populates="user") 

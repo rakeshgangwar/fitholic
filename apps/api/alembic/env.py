@@ -12,6 +12,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core.config import settings
 from app.core.database import Base
 from app.models.user import User  # Import all models here
+from app.models.exercise import Exercise  # Added Exercise model import
+from app.models.workout import WorkoutTemplate, WorkoutLog  # Added Workout models import
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
