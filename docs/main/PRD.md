@@ -80,7 +80,15 @@
 
 **7. Technical Requirements**
 
-* **Frontend:**  React Native (for cross-platform compatibility) or separate native iOS and Android development.
+* **Frontend:**
+    * Web Application (Primary Focus):
+        * Svelte/SvelteKit for a modern, reactive web experience
+        * Progressive Web App (PWA) capabilities
+        * Responsive design for all screen sizes
+    * Mobile Application (Phase 2):
+        * Flutter for cross-platform mobile development
+        * Native performance and features
+        * Offline capabilities
 * **Backend:**  Cloud-based infrastructure (AWS, Google Cloud, Azure).
 * **Database:**  NoSQL database (MongoDB, Cassandra) for flexibility and scalability.
 * **AI/ML:**  LangGraph for workflow orchestration, LLMs (Gemini Pro) for language processing, and computer vision models (MediaPipe) for form analysis.

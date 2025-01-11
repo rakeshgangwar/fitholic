@@ -36,13 +36,37 @@ const imageOptimizationConfig = {
   placeholder: 'blur'
 };
 
-// React performance optimizations
-const MemorizedComponent = React.memo(({ data }) => {
-  const memoizedValue = useMemo(() => computeExpensiveValue(data), [data]);
-  return <div>{memoizedValue}</div>;
-});
+// Svelte performance optimizations
+const lazyComponent = {
+  component: () => import('./HeavyComponent.svelte'),
+  loading: LoadingSpinner,
+  error: ErrorComponent
+};
 
-// Service worker for offline capabilities
+// Flutter performance optimizations
+class OptimizedWidget extends StatelessWidget {
+  const OptimizedWidget({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return const RepaintBoundary(
+      child: CustomScrollView(
+        cacheExtent: 100.0,
+        physics: AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => const ListItem(),
+              childCount: 100,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Service worker for PWA
 const serviceWorkerConfig = {
   cacheName: 'fitholic-v1',
   assets: [
@@ -119,38 +143,39 @@ CREATE TABLE workout_logs_y2024m01 PARTITION OF workout_logs_partitioned
 
 **End-to-End Testing**
 ```typescript
-// Cypress test example
-describe('Workout Flow', () => {
-  it('should complete a workout session', () => {
-    cy.login();
-    cy.visit('/workouts');
-    cy.get('[data-testid="start-workout"]').click();
-    cy.get('[data-testid="exercise-list"]')
-      .should('be.visible')
-      .and('have.length.gt', 0);
-    cy.get('[data-testid="complete-workout"]').click();
-    cy.get('[data-testid="workout-summary"]')
-      .should('be.visible');
-  });
+// Playwright test example for web
+test('workout flow', async ({ page }) => {
+  await page.goto('/workouts');
+  await page.getByTestId('start-workout').click();
+  await expect(page.getByTestId('exercise-list')).toBeVisible();
+  await expect(page.getByTestId('exercise-list')).toHaveCount({ min: 1 });
+  await page.getByTestId('complete-workout').click();
+  await expect(page.getByTestId('workout-summary')).toBeVisible();
 });
+
+// Flutter integration test example
+void main() {
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('workout flow test', (WidgetTester tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.tap(find.byKey(const Key('start-workout')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('exercise-list')), findsWidgets);
+    await tester.tap(find.byKey(const Key('complete-workout')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('workout-summary')), findsOneWidget);
+  });
+}
 
 // Performance testing
 describe('Performance Tests', () => {
-  it('should load workout page within 2 seconds', () => {
-    cy.visit('/workouts', {
-      onBeforeLoad: (win) => {
-        win.performance.mark('start-load');
-      },
-    });
-    cy.window().then((win) => {
-      win.performance.mark('end-load');
-      const measure = win.performance.measure(
-        'page-load',
-        'start-load',
-        'end-load'
-      );
-      expect(measure.duration).to.be.lessThan(2000);
-    });
+  test('should load workout page within 2 seconds', async ({ page }) => {
+    const startTime = Date.now();
+    await page.goto('/workouts');
+    await page.waitForSelector('[data-testid="workout-page"]');
+    const loadTime = Date.now() - startTime;
+    expect(loadTime).toBeLessThan(2000);
   });
 });
 ```

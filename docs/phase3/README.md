@@ -280,24 +280,52 @@ CREATE TABLE form_analysis (
 
 ### Frontend Components
 
-**Nutrition Components**
+**Web Components (Svelte)**
 ```
-src/components/
+src/lib/components/
 ├── nutrition/
-│   ├── FoodLogger.tsx
-│   ├── MealPlanner.tsx
-│   ├── NutritionDashboard.tsx
-│   ├── RecipeViewer.tsx
-│   └── GroceryList.tsx
+│   ├── FoodLogger.svelte
+│   ├── MealPlanner.svelte
+│   ├── NutritionDashboard.svelte
+│   ├── RecipeViewer.svelte
+│   └── GroceryList.svelte
 ├── form-analysis/
-│   ├── FormCamera.tsx
-│   ├── FormFeedback.tsx
-│   ├── FormHistory.tsx
-│   └── FormComparison.tsx
+│   ├── FormCamera.svelte
+│   ├── FormFeedback.svelte
+│   ├── FormHistory.svelte
+│   └── FormComparison.svelte
 └── ai-features/
-    ├── WorkoutAdjustment.tsx
-    ├── NutritionAdvice.tsx
-    └── ProgressInsights.tsx
+    ├── WorkoutAdjustment.svelte
+    ├── NutritionAdvice.svelte
+    └── ProgressInsights.svelte
+```
+
+**Mobile Components (Flutter)**
+```
+lib/
+├── widgets/
+│   ├── nutrition/
+│   │   ├── food_logger.dart
+│   │   ├── meal_planner.dart
+│   │   ├── nutrition_dashboard.dart
+│   │   ├── recipe_viewer.dart
+│   │   └── grocery_list.dart
+│   ├── form_analysis/
+│   │   ├── form_camera.dart
+│   │   ├── form_feedback.dart
+│   │   ├── form_history.dart
+│   │   └── form_comparison.dart
+│   └── ai_features/
+│       ├── workout_adjustment.dart
+│       ├── nutrition_advice.dart
+│       └── progress_insights.dart
+├── screens/
+│   ├── nutrition_screen.dart
+│   ├── form_analysis_screen.dart
+│   └── insights_screen.dart
+└── utils/
+    ├── camera_utils.dart
+    └── ml_utils.dart
 ```
 
 ### Testing Requirements

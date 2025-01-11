@@ -213,21 +213,46 @@ CREATE TABLE workout_logs (
 
 ### Frontend Components
 
-**Core Components**
+**Web Components (Svelte)**
 ```
-src/components/
+src/lib/components/
 ├── exercises/
-│   ├── ExerciseCard.tsx
-│   ├── ExerciseDetail.tsx
-│   └── ExerciseForm.tsx
+│   ├── ExerciseCard.svelte
+│   ├── ExerciseDetail.svelte
+│   └── ExerciseForm.svelte
 ├── workouts/
-│   ├── WorkoutPlanner.tsx
-│   ├── WorkoutLogger.tsx
-│   └── WorkoutSummary.tsx
+│   ├── WorkoutPlanner.svelte
+│   ├── WorkoutLogger.svelte
+│   └── WorkoutSummary.svelte
 └── profile/
-    ├── ProfileEditor.tsx
-    ├── ProgressChart.tsx
-    └── SettingsPanel.tsx
+    ├── ProfileEditor.svelte
+    ├── ProgressChart.svelte
+    └── SettingsPanel.svelte
+```
+
+**Mobile Components (Flutter)**
+```
+lib/
+├── widgets/
+│   ├── exercises/
+│   │   ├── exercise_card.dart
+│   │   ├── exercise_detail.dart
+│   │   └── exercise_form.dart
+│   ├── workouts/
+│   │   ├── workout_planner.dart
+│   │   ├── workout_logger.dart
+│   │   └── workout_summary.dart
+│   └── profile/
+│       ├── profile_editor.dart
+│       ├── progress_chart.dart
+│       └── settings_panel.dart
+├── screens/
+│   ├── home_screen.dart
+│   ├── workout_screen.dart
+│   └── profile_screen.dart
+└── utils/
+    ├── theme.dart
+    └── constants.dart
 ```
 
 ### Testing Requirements

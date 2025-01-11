@@ -29,21 +29,41 @@
   - JWT token management
 
 **3. Basic Frontend Development**
-- Set up React Native project
-  - Project initialization
-  - Navigation setup
-  - Theme and styling system
-- Implement core screens
+- Set up Svelte/SvelteKit project
+  - Project initialization with Vite
+  - SvelteKit routing setup
+  - Theme and styling system with CSS-in-JS/SCSS
+- Implement core web screens
   - Login/Registration
   - User profile
   - Basic workout view
+  - Responsive design implementation
 - API integration
   - Authentication flow
   - Basic data fetching
+  - Error handling
+- Progressive Web App setup
+  - Service worker configuration
+  - Offline capabilities
+  - Mobile-responsive design
 
-### Phase 2: Core Features (Weeks 5-8)
+### Phase 2: Core Features and Mobile Development (Weeks 5-8)
 
-**1. Workout Management**
+**1. Mobile Application Setup**
+- Initialize Flutter project
+  - Project structure setup
+  - State management configuration
+  - Theme and styling system
+- Core mobile screens
+  - Login/Registration
+  - User profile
+  - Basic workout view
+- Cross-platform considerations
+  - Platform-specific UI/UX
+  - Native feature integration
+  - Performance optimization
+
+**2. Workout Management**
 - Exercise library implementation
   - Exercise database population
   - Exercise search and filtering
@@ -57,7 +77,7 @@
   - Progress tracking
   - Basic analytics
 
-**2. User Profile and Settings**
+**3. User Profile and Settings**
 - Profile management
   - User preferences
   - Goals setting
@@ -67,7 +87,7 @@
   - Notification preferences
   - Privacy settings
 
-**3. Basic AI Integration**
+**4. Basic AI Integration**
 - Set up LangChain infrastructure
   - Configure Gemini Pro integration
   - Set up basic prompt templates

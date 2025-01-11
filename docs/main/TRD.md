@@ -8,8 +8,10 @@
 
 **2. System Architecture**
 
-* **Overall Architecture:** Client-server architecture with a mobile frontend and a cloud-based backend.
-* **Frontend:** React Native (preferred for cross-platform compatibility) or Flutter.
+* **Overall Architecture:** Client-server architecture with web and mobile frontends and a cloud-based backend.
+* **Frontend:** 
+    * Web: Svelte (primary development focus)
+    * Mobile: Flutter (to be developed in phase 2)
 * **Backend:** FastAPI (Python web framework).
 * **Database & Auth:** Supabase (provides PostgreSQL database, authentication, and storage).
 * **AI/ML:**
@@ -19,17 +21,22 @@
 
 **3. Frontend**
 
-* **Technology:** React Native or Flutter.
+* **Technology:** 
+    * Web: Svelte
+    * Mobile: Flutter (Phase 2)
 * **Responsibilities:**
-    * User interface (UI) design and implementation.
-    * User input handling and validation.
-    * Data display and visualization.
-    * Communication with the backend API.
-    * (Optional) On-device processing for certain features (e.g., initial pose estimation).
+    * User interface (UI) design and implementation
+    * User input handling and validation
+    * Data display and visualization
+    * Communication with the backend API
+    * (Optional) On-device processing for certain features (e.g., initial pose estimation)
 * **Considerations:**
-    * Responsive design for various screen sizes.
-    * Offline functionality for workout tracking and content access.
-    * Performance optimization for smooth user experience.
+    * Responsive web design for various screen sizes
+    * Progressive Web App (PWA) capabilities
+    * Mobile-first approach for web development
+    * Offline functionality for workout tracking and content access
+    * Performance optimization for smooth user experience
+    * Cross-platform compatibility for mobile development
 
 **4. Backend**
 
@@ -85,7 +92,9 @@
 
 **8. Deployment**
 
-* **Frontend:**  Deploy to respective app stores (iOS App Store, Google Play Store).
+* **Frontend:**  
+    * Web: Deploy to cloud hosting (Vercel/Netlify)
+    * Mobile: Deploy to respective app stores (iOS App Store, Google Play Store) in Phase 2
 * **Backend:**  Deploy to a cloud platform (AWS, Google Cloud, Azure) using containerization (Docker) and orchestration (Kubernetes).
 * **Database:**  Utilize Supabase's managed database service.
 

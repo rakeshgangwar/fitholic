@@ -107,17 +107,22 @@ CREATE TABLE workouts (
 
 #### 4. Frontend Development
 
-**React Native Project Structure**
+**Svelte/SvelteKit Project Structure**
 ```
 frontend/
 ├── src/
-│   ├── components/
-│   ├── screens/
-│   ├── navigation/
-│   ├── services/
-│   ├── utils/
-│   └── theme/
-├── App.tsx
+│   ├── lib/
+│   │   ├── components/
+│   │   ├── stores/
+│   │   └── utils/
+│   ├── routes/
+│   ├── app.html
+│   ├── app.d.ts
+│   └── app.css
+├── static/
+├── tests/
+├── svelte.config.js
+├── vite.config.ts
 └── package.json
 ```
 
@@ -125,10 +130,16 @@ frontend/
 ```json
 {
   "dependencies": {
-    "react-native": "0.72.7",
-    "react-navigation": "^4.4.4",
-    "@react-native-async-storage/async-storage": "^1.21.0",
+    "@sveltejs/kit": "^2.0.0",
+    "svelte": "^4.2.0",
+    "@sveltejs/adapter-auto": "^3.0.0",
     "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0",
+    "playwright": "^1.40.0",
+    "@sveltejs/vite-plugin-svelte": "^3.0.0"
   }
 }
 ```
@@ -148,10 +159,11 @@ frontend/
    - Authentication system
 
 3. **Frontend**
-   - React Native project setup
-   - Navigation structure
-   - Basic screens (Login, Register, Home)
+   - Svelte/SvelteKit project setup
+   - Routing structure
+   - Basic pages (Login, Register, Home)
    - API integration setup
+   - Progressive Web App configuration
 
 ### Testing Requirements
 
@@ -161,8 +173,8 @@ frontend/
    - Authentication tests
 
 2. **Frontend Tests**
-   - Component rendering tests
-   - Navigation tests
+   - Component testing with Vitest
+   - End-to-end testing with Playwright
    - API integration tests
 
 ### Documentation Requirements

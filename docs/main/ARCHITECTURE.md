@@ -10,7 +10,8 @@ This document outlines the technical architecture for our AI-powered fitness app
 fitholic/
 ├── .github/                    # GitHub Actions workflows
 ├── apps/                       # Application packages
-│   ├── mobile/                # React Native mobile app
+│   ├── web/                   # Svelte web application
+│   ├── mobile/                # Flutter mobile app (Phase 2)
 │   ├── api/                   # FastAPI backend service
 │   └── ai/                    # AI/ML services
 ├── libs/                      # Shared libraries
@@ -27,15 +28,25 @@ fitholic/
 #### 3.1 Package Management
 - **uv**: Modern Python package manager for fast, reliable dependency management
 - **Poetry**: For dependency management and packaging in Python
-- **yarn**: For JavaScript/TypeScript package management
+- **pnpm**: For JavaScript/TypeScript package management
+- **pub**: For Dart/Flutter package management
 
-#### 3.2 Frontend (Mobile)
-- **Framework**: React Native
-- **State Management**: Redux Toolkit
-- **Navigation**: React Navigation
+#### 3.2 Frontend
+##### Web Application (Primary Focus)
+- **Framework**: Svelte/SvelteKit
+- **State Management**: Built-in Svelte stores
+- **Routing**: SvelteKit routing
 - **UI Components**: Custom component library
-- **Testing**: Jest, React Native Testing Library
-- **Build Tools**: Metro bundler
+- **Testing**: Vitest, Playwright
+- **Build Tools**: Vite
+
+##### Mobile Application (Phase 2)
+- **Framework**: Flutter
+- **State Management**: Provider/Riverpod
+- **Navigation**: Flutter Navigation 2.0
+- **UI Components**: Material Design/Custom widgets
+- **Testing**: Flutter Test
+- **Build Tools**: Flutter SDK
 
 #### 3.3 Backend
 - **Framework**: FastAPI
