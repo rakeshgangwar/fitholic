@@ -1,23 +1,24 @@
 from datetime import timedelta
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.security import create_access_token
 from app.core.database import get_db
-from app.schemas.auth import Token, LoginRequest
+from app.schemas.auth import Token
 from app.schemas.user import UserCreate, User
 from app.services.user import authenticate_user, create_user, get_user_by_email
 
 router = APIRouter()
 
 @router.post("/register", response_model=User, status_code=status.HTTP_201_CREATED)
-def register(
-    *,
-    db: Session = Depends(get_db),
+async def register(
+    request: Request,
     user_in: UserCreate,
+    db: Session = Depends(get_db),
 ) -> Any:
     """
     Register a new user.
@@ -29,18 +30,30 @@ def register(
             detail="Email already registered",
         )
     user = create_user(db, user_in)
-    return user
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED,
+        content={
+            "id": str(user.id),
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "is_active": user.is_active,
+            "is_superuser": user.is_superuser,
+            "created_at": user.created_at.isoformat(),
+            "updated_at": user.updated_at.isoformat()
+        }
+    )
 
 @router.post("/login", response_model=Token)
-def login(
-    *,
+async def login(
+    request: Request,
     db: Session = Depends(get_db),
-    login_data: LoginRequest,
+    form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> Any:
     """
-    Get access token for user.
+    OAuth2 compatible token login, get an access token for future requests.
     """
-    user = authenticate_user(db, login_data.email, login_data.password)
+    user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -51,4 +64,6 @@ def login(
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"} 
+    return JSONResponse(
+        content={"access_token": access_token, "token_type": "bearer"}
+    ) 

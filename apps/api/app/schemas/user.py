@@ -4,14 +4,16 @@ from datetime import datetime
 
 class UserBase(BaseModel):
     email: EmailStr
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    first_name: str
+    last_name: str
 
 class UserCreate(UserBase):
     password: str
 
 class UserUpdate(UserBase):
     password: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
 
 class UserInDBBase(UserBase):
     id: UUID4

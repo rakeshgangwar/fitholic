@@ -1,13 +1,13 @@
 ## Phase 2: Core Features (Weeks 5-8)
 
 ### Overview
-This phase focuses on implementing the core features of the application, including workout management, user profiles, and basic AI integration. The goal is to create a functional fitness application with essential features.
+This phase focuses on implementing the core features of the application, including workout management, user profiles, basic AI integration, and enhanced security features. The goal is to create a functional fitness application with essential features and robust security measures.
 
 ### Timeline
 - Week 5: Exercise Library & Workout Management
 - Week 6: User Profile & Settings
 - Week 7: Basic AI Integration Setup
-- Week 8: Testing & Refinement
+- Week 8: Security Enhancements & Testing
 
 ### Detailed Implementation Plan
 
@@ -284,5 +284,58 @@ src/components/
    - Database schema updates
    - AI integration guide
    - Testing procedures
+
+### Security Enhancements
+
+#### 1. Rate Limiting Implementation
+
+**Configuration**
+```python
+# Rate limiting settings
+RATE_LIMITS = {
+    "DEFAULT": "100/minute",  # Default API rate limit
+    "AUTH": "5/minute",       # Authentication endpoints
+    "AI": "20/minute",        # AI-powered endpoints
+    "UPLOAD": "10/minute"     # File upload endpoints
+}
+
+# Rate limiter setup
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[RATE_LIMITS["DEFAULT"]],
+    storage_uri="redis://localhost:6379",  # Use Redis for distributed rate limiting
+    strategy="fixed-window",
+    headers_enabled=True
+)
+```
+
+**Endpoint Protection**
+```python
+@router.post("/auth/login")
+@limiter.limit(RATE_LIMITS["AUTH"])
+async def login(request: Request):
+    """Rate-limited login endpoint"""
+
+@router.post("/workouts/generate")
+@limiter.limit(RATE_LIMITS["AI"])
+async def generate_workout(request: Request):
+    """Rate-limited AI workout generation"""
+
+@router.post("/exercises/form-check")
+@limiter.limit(RATE_LIMITS["UPLOAD"])
+async def check_exercise_form(request: Request):
+    """Rate-limited form check endpoint"""
+```
+
+**Rate Limit Headers**
+```python
+# Response headers for rate limiting
+headers = {
+    "X-RateLimit-Limit": "100",
+    "X-RateLimit-Remaining": "95",
+    "X-RateLimit-Reset": "60",
+    "Retry-After": "5"
+}
+```
 
 This phase sets up the core functionality of the application, providing a solid foundation for the advanced features to be implemented in Phase 3. 

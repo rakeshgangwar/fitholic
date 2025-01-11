@@ -1,12 +1,10 @@
 from pydantic import BaseModel
 
 class Token(BaseModel):
+    """Token schema."""
     access_token: str
     token_type: str
 
-class TokenPayload(BaseModel):
-    sub: str  # user email
-
-class LoginRequest(BaseModel):
-    email: str
-    password: str 
+class TokenData(BaseModel):
+    """Token data schema."""
+    email: str | None = None 

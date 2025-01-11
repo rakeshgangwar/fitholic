@@ -68,3 +68,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add comprehensive test coverage
 - Implement request rate limiting
 - Add API documentation 
+
+## [0.1.1] - 2024-01-12
+
+### Changed
+- Removed rate limiting functionality to be implemented in Phase 2
+- Updated API documentation in FastAPI app description
+- Improved CORS configuration with environment-specific settings
+
+### Added
+- Comprehensive test suite
+  - User registration tests
+  - Authentication tests
+  - Health check endpoint tests
+  - Database cleanup between tests
+  - Test fixtures for FastAPI app and async client
+
+### Fixed
+- Fixed user registration response format
+- Improved error handling in authentication endpoints
+- Updated configuration to use proper database URL format
+
+### Technical Debt
+- Implement rate limiting in Phase 2
+- Address deprecation warnings:
+  - Update datetime.utcnow() to use timezone-aware objects
+  - Migrate to Pydantic v2 ConfigDict
+  - Update pytest-asyncio event loop fixture
+- Improve test coverage for API dependencies (currently at 83%) 
