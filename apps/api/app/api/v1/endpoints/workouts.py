@@ -15,6 +15,7 @@ from app.schemas.workout import (
     WorkoutLogUpdate
 )
 from app.crud import workout_templates, workout_logs, exercises
+from app.agents.workflows.workout_generation import WorkoutGenerationWorkflow
 
 router = APIRouter()
 
@@ -336,4 +337,44 @@ def delete_workout_log(
             status_code=403,
             detail="Not enough permissions"
         )
-    workout_logs.remove(db, id=log_id) 
+    workout_logs.remove(db, id=log_id)
+
+@router.post("/generate", response_model=WorkoutTemplate)
+async def generate_workout(
+    *,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Generate a personalized workout using AI"""
+    try:
+        # Initialize workflow
+        workflow = WorkoutGenerationWorkflow()
+        
+        # Prepare context with user profile
+        context = {
+            "user_profile": {
+                "fitness_goals": current_user.profile.fitness_goals,
+                "fitness_level": current_user.profile.fitness_level,
+                "available_equipment": current_user.profile.available_equipment,
+                "preferred_workout_duration": current_user.profile.preferred_workout_duration
+            }
+        }
+        
+        # Execute workflow
+        result = await workflow.execute(context)
+        
+        # Extract generated workout
+        workout_template = result.get("generated_workout")
+        if not workout_template:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to generate workout"
+            )
+        
+        return workout_template
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Workout generation failed: {str(e)}"
+        ) 

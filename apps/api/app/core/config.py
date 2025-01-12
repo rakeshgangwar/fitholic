@@ -27,6 +27,17 @@ class Settings(BaseSettings):
     # Optional Google API Key for AI features
     GOOGLE_API_KEY: Optional[str] = None
     
+    # LLM Configuration
+    default_llm_provider: str = "gemini"
+    gemini_api_key: str = ""
+    openai_api_key: str = ""
+    anthropic_api_key: str = ""
+    
+    # LLM Provider Settings
+    llm_timeout: int = 30  # seconds
+    llm_retry_attempts: int = 3
+    llm_cache_enabled: bool = True
+    
     @property
     def get_database_url(self) -> str:
         """Get the database URL."""

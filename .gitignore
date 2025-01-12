@@ -72,4 +72,4 @@ Thumbs.db
 !apps/api/alembic/versions/
 !apps/api/alembic/versions/**/*
 # But still ignore pycache in kept directories
-apps/api/alembic/versions/**/__pycache__/ 
+apps/api/alembic/versions/**/__pycache__/
