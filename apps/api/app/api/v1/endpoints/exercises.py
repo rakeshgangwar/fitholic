@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -13,7 +13,7 @@ from app.schemas.exercise import (
     ExerciseGenerateRequest
 )
 from app.crud import exercises
-from app.services.ai import generate_exercise_with_ai
+from app.services.ai.exercise_generator import generate_exercise_with_ai
 
 router = APIRouter()
 

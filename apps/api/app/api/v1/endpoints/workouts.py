@@ -15,7 +15,7 @@ from app.schemas.workout import (
     WorkoutLogUpdate
 )
 from app.crud import workout_templates, workout_logs, exercises
-from app.agents.workflows.workout_generation import WorkoutGenerationWorkflow
+from app.services.ai.workout_generator import WorkoutGenerator
 
 router = APIRouter()
 
@@ -347,31 +347,27 @@ async def generate_workout(
 ):
     """Generate a personalized workout using AI"""
     try:
-        # Initialize workflow
-        workflow = WorkoutGenerationWorkflow()
+        # Initialize workout generator with database session
+        generator = WorkoutGenerator(db)
         
-        # Prepare context with user profile
-        context = {
-            "user_profile": {
-                "fitness_goals": current_user.profile.fitness_goals,
-                "fitness_level": current_user.profile.fitness_level,
-                "available_equipment": current_user.profile.available_equipment,
-                "preferred_workout_duration": current_user.profile.preferred_workout_duration
-            }
+        # Prepare user profile
+        user_profile = {
+            "fitness_goals": current_user.profile.fitness_goals or ["general fitness"],
+            "available_equipment": current_user.profile.available_equipment or [],
+            "preferred_workout_duration": current_user.profile.preferred_workout_duration or 45,
+            # Infer fitness level from goals and other data
+            "fitness_level": "beginner"  # Default to beginner if no other info available
         }
         
-        # Execute workflow
-        result = await workflow.execute(context)
+        # Generate workout template
+        template_in = await generator.generate_workout(user_profile)
         
-        # Extract generated workout
-        workout_template = result.get("generated_workout")
-        if not workout_template:
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to generate workout"
-            )
-        
-        return workout_template
+        # Save the template
+        return workout_templates.create_with_user(
+            db=db,
+            obj_in=template_in,
+            user_id=current_user.id
+        )
         
     except Exception as e:
         raise HTTPException(

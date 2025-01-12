@@ -29,9 +29,11 @@ class Settings(BaseSettings):
     
     # LLM Configuration
     default_llm_provider: str = "gemini"
-    gemini_api_key: str = ""
-    openai_api_key: str = ""
-    anthropic_api_key: str = ""
+    GEMINI_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
+    ANTHROPIC_API_KEY: str = ""
+
+    DEBUG: bool = True
     
     # LLM Provider Settings
     llm_timeout: int = 30  # seconds

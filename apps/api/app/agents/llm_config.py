@@ -43,28 +43,32 @@ class LLMFactory:
                 model=config.model_name,
                 temperature=config.temperature,
                 max_output_tokens=config.max_tokens,
-                top_p=config.top_p
+                top_p=config.top_p,
+                api_key=settings.GEMINI_API_KEY
             )
         elif isinstance(config, OpenAIConfig):
             return ChatOpenAI(
                 model=config.model_name,
                 temperature=config.temperature,
                 max_tokens=config.max_tokens,
-                top_p=config.top_p
+                top_p=config.top_p,
+                api_key=settings.OPENAI_API_KEY
             )
         elif isinstance(config, AnthropicConfig):
             return ChatAnthropic(
                 model=config.model_name,
                 temperature=config.temperature,
                 max_tokens=config.max_tokens,
-                top_p=config.top_p
+                top_p=config.top_p,
+                api_key=settings.ANTHROPIC_API_KEY
             )
         else:
             raise ValueError(f"Unsupported LLM provider: {config.provider}")
 
 # Workflow-specific LLM configurations
 WORKFLOW_CONFIGS = {
-    "workout_generation": GeminiConfig(
+    "workout_generation": OpenAIConfig(
+        model_name="gpt-4o",
         temperature=0.7,  # Good for creative but structured output
         max_tokens=2000   # Longer context for detailed workout plans
     ),
@@ -77,7 +81,8 @@ WORKFLOW_CONFIGS = {
         temperature=0.5,  # Balanced between creativity and precision
         max_tokens=2500   # Longer context for detailed meal plans
     ),
-    "motivation": GeminiConfig(
+    "motivation": OpenAIConfig(
+        model_name="gpt-4o-mini",
         temperature=0.9,  # Higher temperature for more creative motivation
         max_tokens=1000   # Shorter, punchier motivational messages
     )

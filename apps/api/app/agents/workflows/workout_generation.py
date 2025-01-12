@@ -1,6 +1,11 @@
-from typing import Dict, Any
-from langgraph.graph import Graph, StateGraph
+from typing import Dict, Any, TypedDict, Annotated
+from langgraph.graph import StateGraph
 from app.agents.nodes.workout import WorkoutGeneratorNode
+
+# Define the state type
+class WorkoutState(TypedDict):
+    user_profile: Dict[str, Any]
+    generated_workout: Dict[str, Any]
 
 class WorkoutGenerationWorkflow:
     """Workflow for generating personalized workouts"""
@@ -11,19 +16,15 @@ class WorkoutGenerationWorkflow:
     
     def _build_graph(self) -> StateGraph:
         """Build the LangGraph workflow"""
-        # Initialize the graph
-        graph = StateGraph(nodes=["generate_workout"])
+        # Initialize the graph with state type
+        graph = StateGraph(WorkoutState)
         
         # Add nodes
-        graph.add_node("generate_workout", self.workout_generator)
+        graph.add_node(self.workout_generator, "generate_workout")
         
-        # Define the end condition
-        def end_condition(state: Dict[str, Any]) -> bool:
-            """Check if workflow should end"""
-            return "generated_workout" in state
-        
-        # Set the end condition
-        graph.set_end_condition(end_condition)
+        # Set entry and finish points
+        graph.set_entry_point("generate_workout")
+        graph.set_finish_point("generate_workout")
         
         # Compile the graph
         return graph.compile()

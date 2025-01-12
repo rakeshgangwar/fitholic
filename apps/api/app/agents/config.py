@@ -4,7 +4,7 @@ from app.core.config import settings
 
 class AgentConfig(BaseModel):
     """Base configuration for agents"""
-    model_name: str = "gemini-pro"
+    model_name: str = "gpt-4o"
     temperature: float = 0.7
     max_tokens: int = 1000
     top_p: float = 0.95

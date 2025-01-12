@@ -4,6 +4,11 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.core.logging import setup_logging, get_logger
+
+# Initialize logging
+logger = get_logger(__name__)
+setup_logging()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -42,3 +47,11 @@ async def health():
     return JSONResponse(content={"status": "ok"})
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Starting up Fitholic API")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Shutting down Fitholic API")
+
