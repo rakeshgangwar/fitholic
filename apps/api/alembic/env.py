@@ -14,6 +14,8 @@ from app.core.database import Base
 from app.models.user import User  # Import all models here
 from app.models.exercise import Exercise  # Added Exercise model import
 from app.models.workout import WorkoutTemplate, WorkoutLog  # Added Workout models import
+from app.models.user_profile import UserProfile  # Added UserProfile model import
+from app.models.user_measurement import UserMeasurement  # Added UserMeasurement model import
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

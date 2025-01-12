@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
+from uuid import UUID
 
 class Token(BaseModel):
     """Token schema."""
@@ -7,4 +8,8 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     """Token data schema."""
-    email: str | None = None 
+    email: str | None = None
+
+class TokenPayload(BaseModel):
+    """Token payload schema."""
+    sub: EmailStr 

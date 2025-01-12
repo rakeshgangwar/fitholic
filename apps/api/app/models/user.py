@@ -19,5 +19,6 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), server_default='now()', onupdate='now()')
 
     # Add relationships
+    profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     workout_templates = relationship("WorkoutTemplate", back_populates="user")
     workout_logs = relationship("WorkoutLog", back_populates="user") 
