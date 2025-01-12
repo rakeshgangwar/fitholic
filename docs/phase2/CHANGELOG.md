@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.3] - 2024-01-12
+
+### Changed
+- Enhanced profile management UI components
+  - Replaced Flowbite form components with custom styled inputs
+  - Improved form field styling with proper focus states and borders
+  - Added proper data initialization for form fields
+  - Fixed profile data prefilling issues
+
+### Fixed
+- Profile data handling in frontend components
+  - Corrected API response data extraction
+  - Fixed undefined value handling in form fields
+  - Improved type safety for profile data
+  - Resolved issues with form field default values
+
 ## [2.0.2] - 2024-01-12
 
 ### Added

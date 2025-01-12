@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { authStore } from '$lib/stores/auth';
+import { goto } from '$app/navigation';
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
@@ -21,10 +23,17 @@ api.interceptors.request.use((config) => {
 // Add response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
+      // Clear auth state
+      authStore.clear();
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      
+      // Only redirect if not already on auth pages
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith('/auth/')) {
+        await goto('/auth/login');
+      }
     }
     return Promise.reject(error);
   }

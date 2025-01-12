@@ -50,4 +50,52 @@ export interface WorkoutLog {
   exercises: WorkoutExerciseLog[];
   created_at: string;
   updated_at: string;
+}
+
+export interface NotificationSettings {
+    workout_reminders: boolean;
+    progress_updates: boolean;
+    achievement_alerts: boolean;
+}
+
+export interface PrivacySettings {
+    profile_visibility: 'public' | 'private' | 'friends';
+    share_workouts: boolean;
+    share_progress: boolean;
+}
+
+export interface UserProfile {
+    id: string;
+    user_id: string;
+    height?: number;
+    weight?: number;
+    date_of_birth?: string;
+    gender?: string;
+    fitness_goals?: string[];
+    preferred_workout_duration?: number;
+    preferred_workout_days?: string[];
+    available_equipment?: string[];
+    theme: 'light' | 'dark' | 'system';
+    language: string;
+    units: 'metric' | 'imperial';
+    notification_settings: NotificationSettings;
+    privacy_settings: PrivacySettings;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface UserProfileUpdate {
+    height?: number;
+    weight?: number;
+    date_of_birth?: string;
+    gender?: string;
+    fitness_goals?: string[];
+    preferred_workout_duration?: number;
+    preferred_workout_days?: string[];
+    available_equipment?: string[];
+    theme?: 'light' | 'dark' | 'system';
+    language?: string;
+    units?: 'metric' | 'imperial';
+    notification_settings?: NotificationSettings;
+    privacy_settings?: PrivacySettings;
 } 

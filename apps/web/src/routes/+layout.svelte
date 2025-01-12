@@ -13,14 +13,35 @@
 
 	// Initialize auth state on mount
 	onMount(async () => {
-		await authStore.init();
-		initializing = false;
-		isInitialized.set(true);
+		try {
+			if (browser) {
+				const token = localStorage.getItem('token');
+				if (!token) {
+					authStore.clear();
+					if (!publicPaths.includes($page.url.pathname)) {
+						await goto('/auth/login');
+					}
+				} else {
+					await authStore.init();
+				}
+			}
+		} catch (error) {
+			console.error('Auth initialization error:', error);
+			authStore.clear();
+			if (browser && !publicPaths.includes($page.url.pathname)) {
+				await goto('/auth/login');
+			}
+		} finally {
+			initializing = false;
+			isInitialized.set(true);
+		}
 	});
 
-	// Handle protected route navigation
-	$: if (!initializing && browser && !publicPaths.includes($page.url.pathname) && !$authStore) {
-		goto('/auth/login');
+	// Handle protected route navigation only after initialization
+	$: if (!initializing && browser && !publicPaths.includes($page.url.pathname)) {
+		if (!$authStore || !localStorage.getItem('token')) {
+			goto('/auth/login');
+		}
 	}
 </script>
 

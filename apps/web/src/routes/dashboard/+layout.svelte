@@ -41,10 +41,16 @@
             </a>
           </div>
         </div>
-        <div class="flex items-center">
+        <div class="flex items-center space-x-4">
+          <a 
+            href="/dashboard/profile"
+            class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+          >
+            Profile
+          </a>
           <button
             on:click={handleSignOut}
-            class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Sign out
           </button>
