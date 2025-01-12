@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.5] - 2024-01-12
+
+### Changed
+- Enhanced AI-powered workout generation system
+  - Implemented structured output using LangChain and Pydantic models
+  - Added `WorkoutPlan` and `WorkoutExercise` schemas for better type safety
+  - Improved prompt template with clearer exercise requirements
+  - Enhanced error handling and validation for generated workouts
+  - Streamlined workout template creation process
+
+- Improved exercise generation system
+  - Migrated to structured output using LangChain
+  - Added `ExerciseDetails` Pydantic model for validated output
+  - Updated prompt template to use ChatPromptTemplate
+  - Enhanced exercise creation workflow with better type safety
+  - Improved error handling for exercise generation
+
+### Fixed
+- Exercise generation parsing and validation
+- Workout template generation reliability
+- Type safety in AI-generated content
+- Error handling in workout and exercise generation
+
 ## [2.0.4] - 2024-01-12
 
 ### Added
