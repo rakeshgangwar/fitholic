@@ -1,5 +1,6 @@
-from typing import Optional
+from typing import List, Optional
 from pydantic_settings import BaseSettings
+from pydantic import AnyHttpUrl, validator
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Fitholic"
@@ -22,10 +23,16 @@ class Settings(BaseSettings):
     
     # Environment
     ENVIRONMENT: str = "development"
+
+    # Optional Google API Key for AI features
+    GOOGLE_API_KEY: Optional[str] = None
     
     @property
     def get_database_url(self) -> str:
         """Get the database URL."""
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
+
+    class Config:
+        env_file = ".env"
 
 settings = Settings()

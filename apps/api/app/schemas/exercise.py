@@ -24,6 +24,13 @@ class ExerciseSearch(BaseModel):
     equipment: Optional[List[str]] = None
     difficulty: Optional[str] = None
 
+class ExerciseGenerateRequest(BaseModel):
+    exercise_type: str
+    target_muscles: List[str]
+    available_equipment: Optional[List[str]] = []
+    difficulty: Optional[str] = None
+    considerations: Optional[str] = None
+
 class Exercise(ExerciseBase):
     exercise_id: UUID
     created_at: datetime

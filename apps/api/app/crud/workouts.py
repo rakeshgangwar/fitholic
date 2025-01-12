@@ -2,10 +2,17 @@ from typing import List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
 from datetime import date, timedelta
+import json
 
 from app.crud.base import CRUDBase
 from app.models.workout import WorkoutTemplate, WorkoutLog
 from app.schemas.workout import WorkoutTemplateCreate, WorkoutTemplateUpdate, WorkoutLogCreate, WorkoutLogUpdate
+
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            return str(obj)
+        return super().default(obj)
 
 class CRUDWorkoutTemplate(CRUDBase[WorkoutTemplate, WorkoutTemplateCreate, WorkoutTemplateUpdate]):
     def get_by_user(
@@ -22,8 +29,14 @@ class CRUDWorkoutTemplate(CRUDBase[WorkoutTemplate, WorkoutTemplateCreate, Worko
     def create_with_user(
         self, db: Session, *, obj_in: WorkoutTemplateCreate, user_id: UUID
     ) -> WorkoutTemplate:
+        obj_data = obj_in.model_dump()
+        # Convert exercises list to JSON with UUID handling
+        exercises_data = json.loads(
+            json.dumps(obj_data["exercises"], cls=UUIDEncoder)
+        )
         db_obj = WorkoutTemplate(
-            **obj_in.model_dump(),
+            **{k: v for k, v in obj_data.items() if k != "exercises"},
+            exercises=exercises_data,
             created_by=user_id
         )
         db.add(db_obj)
@@ -61,8 +74,14 @@ class CRUDWorkoutLog(CRUDBase[WorkoutLog, WorkoutLogCreate, WorkoutLogUpdate]):
     def create_with_user(
         self, db: Session, *, obj_in: WorkoutLogCreate, user_id: UUID
     ) -> WorkoutLog:
+        obj_data = obj_in.model_dump()
+        # Convert exercises list to JSON with UUID handling
+        exercises_data = json.loads(
+            json.dumps(obj_data["exercises"], cls=UUIDEncoder)
+        )
         db_obj = WorkoutLog(
-            **obj_in.model_dump(),
+            **{k: v for k, v in obj_data.items() if k != "exercises"},
+            exercises=exercises_data,
             user_id=user_id
         )
         db.add(db_obj)

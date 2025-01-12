@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.4] - 2024-01-12
+
+### Added
+- AI-powered exercise generation feature
+  - New API endpoint `/exercises/generate` for AI-assisted exercise creation
+  - Integration with Google's Gemini Pro model for generating exercise details
+  - Structured exercise generation with:
+    - Exercise type specification
+    - Target muscle group targeting
+    - Equipment consideration
+    - Difficulty level adaptation
+    - Special considerations handling
+  - Frontend integration with exercise form component
+  - Configurable AI settings through environment variables
+
+### Changed
+- Enhanced exercise creation workflow with AI assistance
+- Updated configuration system to support optional AI features
+- Improved error handling for AI-related operations
+- Enhanced UUID handling in workout templates and logs
+  - Added custom JSON serialization for UUID fields
+  - Fixed JSON serialization issues in workout template creation
+  - Improved data handling in workout log creation
+
+### Fixed
+- UUID serialization in workout templates JSON fields
+- Exercise generation error handling and response formatting
+- Configuration loading for optional AI features
+- Database compatibility issues with UUID fields in JSON columns
+
 ## [2.0.3] - 2024-01-12
 
 ### Changed

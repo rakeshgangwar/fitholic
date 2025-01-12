@@ -9,9 +9,11 @@ from app.schemas.exercise import (
     Exercise,
     ExerciseCreate,
     ExerciseUpdate,
-    ExerciseSearch
+    ExerciseSearch,
+    ExerciseGenerateRequest
 )
 from app.crud import exercises
+from app.services.ai import generate_exercise_with_ai
 
 router = APIRouter()
 
@@ -38,6 +40,31 @@ def create_exercise(
     Create new exercise.
     """
     return exercises.create(db, obj_in=exercise_in)
+
+@router.post("/generate", response_model=ExerciseCreate)
+async def generate_exercise(
+    *,
+    db: Session = Depends(get_db),
+    request: ExerciseGenerateRequest,
+    current_user: User = Depends(get_current_user)
+) -> ExerciseCreate:
+    """
+    Generate exercise details using AI.
+    """
+    try:
+        exercise = await generate_exercise_with_ai(
+            exercise_type=request.exercise_type,
+            target_muscles=request.target_muscles,
+            available_equipment=request.available_equipment,
+            difficulty=request.difficulty,
+            considerations=request.considerations
+        )
+        return exercise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate exercise: {str(e)}"
+        )
 
 @router.get("/{exercise_id}", response_model=Exercise)
 def get_exercise(
