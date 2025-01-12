@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2] - 2024-01-12
+
+### Added
+- User Profile Management System
+  - New API endpoints for profile operations:
+    - `GET /profiles/me` for getting current user's profile
+    - `POST /profiles/me` for creating user profile
+    - `PUT /profiles/me` for updating profile
+    - `DELETE /profiles/me` for deleting profile
+    - `GET /profiles/{user_id}` for admin access to any profile
+  - Profile features include:
+    - Personal info (height, weight, date of birth, gender)
+    - Fitness goals and preferences
+    - App settings (theme, language, units)
+    - Notification and privacy settings
+
+- Body Measurements Tracking System
+  - New API endpoints for measurements:
+    - `GET /measurements/me` for listing measurements
+    - `POST /measurements/me` for adding new measurements
+    - `GET /measurements/me/{measurement_id}` for specific measurement
+    - `PUT /measurements/me/{measurement_id}` for updating measurements
+    - `DELETE /measurements/me/{measurement_id}` for deleting measurements
+  - Measurement features include:
+    - Core measurements (weight, body fat)
+    - Detailed body measurements (chest, waist, hips, etc.)
+    - Date-based tracking
+    - One measurement per day limit
+
+### Changed
+- Enhanced user model with profile relationship
+- Improved CRUD operations with base class inheritance
+- Updated database schema for user profiles and measurements
+- Standardized API response formats
+
+### Security
+- Added profile ownership validation
+- Protected sensitive user data access
+- Implemented admin-only routes for user management
+
 ## [2.0.1] - 2024-01-12
 
 ### Changed
