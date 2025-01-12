@@ -182,6 +182,8 @@
       equipment = generatedExercise.equipment;
       difficulty = generatedExercise.difficulty;
       instructions = generatedExercise.instructions;
+      console.log(generatedExercise);
+      videoUrl = generatedExercise.video_url;
 
       showAIModal = false;
     } catch (err) {

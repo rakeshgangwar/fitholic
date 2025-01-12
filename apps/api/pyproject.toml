@@ -26,6 +26,8 @@ langgraph = "^0.2.62"
 langchain-openai = "^0.3.0"
 langchain-anthropic = "^0.3.1"
 python-dotenv = "^1.0.1"
+google-api-python-client = "^2.0.0"
+youtube-search = "^2.1.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.4"

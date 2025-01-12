@@ -2,9 +2,13 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
+from langchain_community.tools import YouTubeSearchTool
 from app.core.config import settings
 from app.schemas.exercise import ExerciseCreate
 from fastapi import HTTPException
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 class ExerciseDetails(BaseModel):
     """Schema for generated exercise details"""
@@ -14,6 +18,7 @@ class ExerciseDetails(BaseModel):
     equipment: List[str] = Field(..., description="List of required equipment (if any)")
     difficulty: str = Field(..., description="The appropriate difficulty level (beginner, intermediate, advanced)")
     instructions: str = Field(..., description="Detailed step-by-step instructions for performing the exercise")
+    video_url: Optional[str] = Field(None, description="URL of a YouTube video demonstrating the exercise")
 
 # Define the prompt template using ChatPromptTemplate for better structure
 exercise_prompt = ChatPromptTemplate.from_messages([
@@ -28,6 +33,37 @@ exercise_prompt = ChatPromptTemplate.from_messages([
     
     Provide a complete exercise description that includes all necessary details for proper execution.""")
 ])
+
+async def find_exercise_video(exercise_name: str, target_muscles: List[str]) -> Optional[str]:
+    """
+    Search for a relevant exercise demonstration video on YouTube.
+    """
+    try:
+        youtube_tool = YouTubeSearchTool()
+        search_query = f"how to do {exercise_name} exercise {' '.join(target_muscles)} proper form, 10"
+        results = youtube_tool.run(search_query)
+        
+        # Handle string representation of a list
+        try:
+            import ast
+            urls = ast.literal_eval(results)
+            if isinstance(urls, list) and urls:
+                # Get first URL from the list
+                first_url = urls[0]
+                # Remove any query parameters
+                if 'youtube.com/watch?v=' in first_url:
+                    video_id = first_url.split('watch?v=')[1].split('&')[0]
+                    return f'https://youtube.com/watch?v={video_id}'
+                elif 'youtube.com/shorts/' in first_url:
+                    video_id = first_url.split('shorts/')[1].split('&')[0]
+                    return f'https://youtube.com/shorts/{video_id}'
+        except (ValueError, SyntaxError):
+            logger.warning("Could not parse results as list, skipping")
+            
+        return None
+    except Exception as e:
+        print(f"Failed to fetch YouTube video: {str(e)}")
+        return None
 
 async def generate_exercise_with_ai(
     exercise_type: str,
@@ -61,6 +97,12 @@ async def generate_exercise_with_ai(
         # Generate the exercise details
         exercise_details = await chain.ainvoke(prompt_inputs)
 
+        # Search for a relevant YouTube video
+        video_url = await find_exercise_video(exercise_details.name, target_muscles)
+        exercise_details.video_url = video_url
+
+        logger.info(f"Generated exercise details: {exercise_details}")
+
         # Convert to ExerciseCreate schema
         return ExerciseCreate(
             name=exercise_details.name,
@@ -68,7 +110,8 @@ async def generate_exercise_with_ai(
             muscle_groups=exercise_details.muscle_groups,
             equipment=exercise_details.equipment,
             difficulty=exercise_details.difficulty,
-            instructions=exercise_details.instructions
+            instructions=exercise_details.instructions,
+            video_url=exercise_details.video_url
         )
 
     except Exception as e:

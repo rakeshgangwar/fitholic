@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.7] - 2024-01-13
+
+### Changed
+- Enhanced AI exercise video search functionality
+  - Improved YouTube URL parsing to handle different URL formats
+  - Added filtering to exclude YouTube Shorts from search results
+  - Updated video URL extraction to maintain clean URLs without query parameters
+  - Enhanced error handling for video search failures
+
+### Fixed
+- YouTube video URL parsing in exercise generation
+  - Fixed handling of URL lists returned by YouTube search
+  - Corrected URL extraction for regular YouTube videos
+  - Resolved issues with query parameter handling
+  - Improved error logging for video search failures
+
 ## [2.0.6] - 2024-01-13
 
 ### Added
