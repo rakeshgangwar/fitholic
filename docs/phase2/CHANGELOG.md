@@ -171,4 +171,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved authentication token validation
 - Enhanced user permission checks for workout operations
 
+## [Unreleased]
+
+### Added
+- Added internationalization support for exercise management
+  - Added translations for all exercise-related strings in English, German, French, Spanish, and Hindi
+  - Updated exercise components to use English values for API communication while displaying translated text
+  - Added value-label pairs for muscle groups, equipment, difficulty levels, and exercise types
+  - Implemented helper functions to convert between API values and translated labels
+
+### Changed
+- Updated `ExerciseForm` and `ExerciseList` components to support internationalization
+  - Modified form fields to display translated labels while maintaining English values for API calls
+  - Updated select options and checkboxes to use value-label pattern
+  - Improved type safety by using consistent English values for backend communication
+
+### Fixed
+- Fixed language switching functionality in exercise management interface
+- Ensured consistent API communication regardless of UI language selection
+
 [2.0.0]: https://github.com/username/fitholic/releases/tag/v2.0.0

@@ -4,6 +4,11 @@
   import ExerciseForm from '$lib/components/exercises/ExerciseForm.svelte';
   import type { Exercise } from '$lib/types';
   import { api } from '$lib/api';
+  import { 
+    exercises_title,
+    exercises_add,
+    common_error_generic
+  } from '$lib/paraglide/messages';
 
   let exercises: Exercise[] = [];
   let loading = false;
@@ -21,7 +26,7 @@
       const response = await api.get('/exercises');
       exercises = response.data;
     } catch (err) {
-      error = err instanceof Error ? err.message : 'An error occurred';
+      error = err instanceof Error ? err.message : common_error_generic();
     } finally {
       loading = false;
     }
@@ -47,7 +52,7 @@
   <div class="py-10">
     <header class="flex justify-between items-center">
       <h1 class="text-3xl font-bold leading-tight text-gray-900">
-        Exercise Management
+        {exercises_title()}
       </h1>
       <button
         class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
@@ -56,7 +61,7 @@
           showForm = true;
         }}
       >
-        Add Exercise
+        {exercises_add()}
       </button>
     </header>
 

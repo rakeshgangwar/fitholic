@@ -1,12 +1,13 @@
 <script lang="ts">
   import { authStore } from '$lib/stores/auth';
+  import { nav_welcome } from '$lib/paraglide/messages';
 </script>
 
 <div class="py-10">
   <header>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <h1 class="text-3xl font-bold leading-tight text-gray-900">
-        Welcome back, {$authStore?.first_name || 'User'}!
+        {nav_welcome({ name: $authStore?.first_name || 'User' })}
       </h1>
     </div>
   </header>

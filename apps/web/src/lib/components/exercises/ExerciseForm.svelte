@@ -2,6 +2,64 @@
   import { createEventDispatcher } from 'svelte';
   import type { Exercise } from '$lib/types';
   import { api } from '$lib/api';
+  import {
+    exercises_create_new,
+    exercises_edit,
+    exercises_generate_ai,
+    exercises_cancel,
+    exercises_form_name,
+    exercises_form_name_placeholder,
+    exercises_form_description,
+    exercises_form_description_placeholder,
+    exercises_form_muscle_groups,
+    exercises_form_equipment,
+    exercises_form_difficulty_level,
+    exercises_form_instructions,
+    exercises_form_instructions_placeholder,
+    exercises_form_video_url,
+    exercises_form_video_url_placeholder,
+    exercises_form_required,
+    exercises_form_save_failed,
+    exercises_ai_modal_title,
+    exercises_ai_exercise_type,
+    exercises_ai_target_muscles,
+    exercises_ai_available_equipment,
+    exercises_ai_difficulty,
+    exercises_ai_considerations,
+    exercises_ai_considerations_placeholder,
+    exercises_ai_generate,
+    exercises_ai_generating,
+    exercises_ai_error_muscles,
+    exercises_ai_error_failed,
+    exercises_save,
+    exercises_saving,
+    exercises_muscle_groups_chest,
+    exercises_muscle_groups_back,
+    exercises_muscle_groups_shoulders,
+    exercises_muscle_groups_biceps,
+    exercises_muscle_groups_triceps,
+    exercises_muscle_groups_legs,
+    exercises_muscle_groups_core,
+    exercises_muscle_groups_full_body,
+    exercises_muscle_groups_cardio,
+    exercises_equipment_none,
+    exercises_equipment_dumbbells,
+    exercises_equipment_barbell,
+    exercises_equipment_kettlebell,
+    exercises_equipment_resistance_bands,
+    exercises_equipment_pullup_bar,
+    exercises_equipment_bench,
+    exercises_equipment_cable,
+    exercises_equipment_smith,
+    exercises_difficulty_beginner,
+    exercises_difficulty_intermediate,
+    exercises_difficulty_advanced,
+    exercises_type_strength,
+    exercises_type_cardio,
+    exercises_type_flexibility,
+    exercises_type_balance,
+    exercises_type_plyometric
+  } from '$lib/paraglide/messages';
 
   export let exercise: Exercise | null = null;
 
@@ -32,17 +90,42 @@
   let aiConsiderations = '';
 
   const muscleGroupOptions = [
-    'Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 
-    'Legs', 'Core', 'Full Body', 'Cardio'
+    { value: 'chest', label: exercises_muscle_groups_chest() },
+    { value: 'back', label: exercises_muscle_groups_back() },
+    { value: 'shoulders', label: exercises_muscle_groups_shoulders() },
+    { value: 'biceps', label: exercises_muscle_groups_biceps() },
+    { value: 'triceps', label: exercises_muscle_groups_triceps() },
+    { value: 'legs', label: exercises_muscle_groups_legs() },
+    { value: 'core', label: exercises_muscle_groups_core() },
+    { value: 'full_body', label: exercises_muscle_groups_full_body() },
+    { value: 'cardio', label: exercises_muscle_groups_cardio() }
   ];
 
   const equipmentOptions = [
-    'None', 'Dumbbells', 'Barbell', 'Kettlebell', 'Resistance Bands',
-    'Pull-up Bar', 'Bench', 'Cable Machine', 'Smith Machine'
+    { value: 'none', label: exercises_equipment_none() },
+    { value: 'dumbbells', label: exercises_equipment_dumbbells() },
+    { value: 'barbell', label: exercises_equipment_barbell() },
+    { value: 'kettlebell', label: exercises_equipment_kettlebell() },
+    { value: 'resistance_bands', label: exercises_equipment_resistance_bands() },
+    { value: 'pullup_bar', label: exercises_equipment_pullup_bar() },
+    { value: 'bench', label: exercises_equipment_bench() },
+    { value: 'cable', label: exercises_equipment_cable() },
+    { value: 'smith', label: exercises_equipment_smith() }
   ];
 
-  const difficultyOptions = ['beginner', 'intermediate', 'advanced'];
-  const exerciseTypes = ['strength', 'cardio', 'flexibility', 'balance', 'plyometric'];
+  const difficultyOptions = [
+    { value: 'beginner', label: exercises_difficulty_beginner() },
+    { value: 'intermediate', label: exercises_difficulty_intermediate() },
+    { value: 'advanced', label: exercises_difficulty_advanced() }
+  ];
+
+  const exerciseTypes = [
+    { value: 'strength', label: exercises_type_strength() },
+    { value: 'cardio', label: exercises_type_cardio() },
+    { value: 'flexibility', label: exercises_type_flexibility() },
+    { value: 'balance', label: exercises_type_balance() },
+    { value: 'plyometric', label: exercises_type_plyometric() }
+  ];
 
   function toggleMuscleGroup(group: string, target: string[] = muscleGroups, setter?: (value: string[]) => void) {
     const newValue = target.includes(group)
@@ -68,9 +151,14 @@
     }
   }
 
+  // Helper function to get label for a value
+  function getLabel(value: string, options: Array<{ value: string, label: string }>) {
+    return options.find(opt => opt.value === value)?.label || value;
+  }
+
   async function generateExercise() {
     if (aiTargetMuscles.length === 0) {
-      error = 'Please select at least one target muscle group';
+      error = exercises_ai_error_muscles();
       return;
     }
 
@@ -97,7 +185,7 @@
 
       showAIModal = false;
     } catch (err) {
-      error = err instanceof Error ? err.message : 'Failed to generate exercise';
+      error = err instanceof Error ? err.message : exercises_ai_error_failed();
     } finally {
       generatingWithAI = false;
     }
@@ -105,7 +193,7 @@
 
   async function handleSubmit() {
     if (!name || muscleGroups.length === 0) {
-      error = 'Please fill in all required fields';
+      error = exercises_form_required();
       return;
     }
 
@@ -130,7 +218,7 @@
       }
       dispatch('exerciseCreated');
     } catch (err) {
-      error = err instanceof Error ? err.message : 'Failed to save exercise';
+      error = err instanceof Error ? err.message : exercises_form_save_failed();
     } finally {
       loading = false;
     }
@@ -140,7 +228,7 @@
 <div class="exercise-form max-w-2xl mx-auto bg-white p-6 rounded-lg shadow">
   <div class="mb-6 flex justify-between items-center">
     <h2 class="text-2xl font-bold text-gray-900">
-      {exercise ? 'Edit Exercise' : 'Create New Exercise'}
+      {exercise ? exercises_edit() : exercises_create_new()}
     </h2>
     <div class="flex space-x-2">
       {#if !exercise}
@@ -149,14 +237,14 @@
           class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           on:click={() => showAIModal = true}
         >
-          Generate with AI
+          {exercises_generate_ai()}
         </button>
       {/if}
       <button
         class="text-gray-600 hover:text-gray-800"
         on:click={() => dispatch('cancel')}
       >
-        Cancel
+        {exercises_cancel()}
       </button>
     </div>
   </div>
@@ -170,7 +258,7 @@
   <form on:submit|preventDefault={handleSubmit} class="space-y-6">
     <div>
       <label for="name" class="block text-sm font-medium text-gray-700">
-        Exercise Name *
+        {exercises_form_name()} *
       </label>
       <input
         type="text"
@@ -178,37 +266,37 @@
         bind:value={name}
         required
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-        placeholder="e.g., Barbell Squat"
+        placeholder={exercises_form_name_placeholder()}
       />
     </div>
 
     <div>
       <label for="description" class="block text-sm font-medium text-gray-700">
-        Description
+        {exercises_form_description()}
       </label>
       <textarea
         id="description"
         bind:value={description}
         rows="3"
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-        placeholder="Brief description of the exercise..."
+        placeholder={exercises_form_description_placeholder()}
       />
     </div>
 
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-2">
-        Muscle Groups *
+        {exercises_form_muscle_groups()} *
       </label>
       <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-        {#each muscleGroupOptions as group}
+        {#each muscleGroupOptions as { value, label }}
           <label class="inline-flex items-center">
             <input
               type="checkbox"
-              checked={muscleGroups.includes(group)}
-              on:change={() => toggleMuscleGroup(group)}
+              checked={muscleGroups.includes(value)}
+              on:change={() => toggleMuscleGroup(value)}
               class="rounded border-gray-300 text-green-600 focus:ring-green-500"
             />
-            <span class="ml-2 text-sm text-gray-700">{group}</span>
+            <span class="ml-2 text-sm text-gray-700">{label}</span>
           </label>
         {/each}
       </div>
@@ -216,18 +304,18 @@
 
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-2">
-        Required Equipment
+        {exercises_form_equipment()}
       </label>
       <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-        {#each equipmentOptions as item}
+        {#each equipmentOptions as { value, label }}
           <label class="inline-flex items-center">
             <input
               type="checkbox"
-              checked={equipment.includes(item)}
-              on:change={() => toggleEquipment(item)}
+              checked={equipment.includes(value)}
+              on:change={() => toggleEquipment(value)}
               class="rounded border-gray-300 text-green-600 focus:ring-green-500"
             />
-            <span class="ml-2 text-sm text-gray-700">{item}</span>
+            <span class="ml-2 text-sm text-gray-700">{label}</span>
           </label>
         {/each}
       </div>
@@ -235,42 +323,42 @@
 
     <div>
       <label for="difficulty" class="block text-sm font-medium text-gray-700">
-        Difficulty Level
+        {exercises_form_difficulty_level()}
       </label>
       <select
         id="difficulty"
         bind:value={difficulty}
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
       >
-        {#each difficultyOptions as option}
-          <option value={option}>{option}</option>
+        {#each difficultyOptions as { value, label }}
+          <option {value}>{label}</option>
         {/each}
       </select>
     </div>
 
     <div>
       <label for="instructions" class="block text-sm font-medium text-gray-700">
-        Instructions
+        {exercises_form_instructions()}
       </label>
       <textarea
         id="instructions"
         bind:value={instructions}
         rows="4"
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-        placeholder="Step-by-step instructions for performing the exercise..."
+        placeholder={exercises_form_instructions_placeholder()}
       />
     </div>
 
     <div>
       <label for="video-url" class="block text-sm font-medium text-gray-700">
-        Video URL
+        {exercises_form_video_url()}
       </label>
       <input
         type="url"
         id="video-url"
         bind:value={videoUrl}
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-        placeholder="URL to demonstration video"
+        placeholder={exercises_form_video_url_placeholder()}
       />
     </div>
 
@@ -280,14 +368,14 @@
         class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
         on:click={() => dispatch('cancel')}
       >
-        Cancel
+        {exercises_cancel()}
       </button>
       <button
         type="submit"
         disabled={loading}
         class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-300"
       >
-        {loading ? 'Saving...' : exercise ? 'Update Exercise' : 'Create Exercise'}
+        {loading ? exercises_saving() : exercises_save()}
       </button>
     </div>
   </form>
@@ -297,7 +385,7 @@
   <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
     <div class="bg-white rounded-lg max-w-xl w-full p-6">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-medium text-gray-900">Generate Exercise with AI</h3>
+        <h3 class="text-lg font-medium text-gray-900">{exercises_ai_modal_title()}</h3>
         <button
           class="text-gray-400 hover:text-gray-500"
           on:click={() => showAIModal = false}
@@ -317,33 +405,33 @@
       <div class="space-y-4">
         <div>
           <label for="ai-exercise-type" class="block text-sm font-medium text-gray-700">
-            Exercise Type
+            {exercises_ai_exercise_type()}
           </label>
           <select
             id="ai-exercise-type"
             bind:value={aiExerciseType}
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           >
-            {#each exerciseTypes as type}
-              <option value={type}>{type}</option>
+            {#each exerciseTypes as { value, label }}
+              <option {value}>{label}</option>
             {/each}
           </select>
         </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Target Muscle Groups *
+            {exercises_ai_target_muscles()} *
           </label>
           <div class="grid grid-cols-2 gap-2">
-            {#each muscleGroupOptions as group}
+            {#each muscleGroupOptions as { value, label }}
               <label class="inline-flex items-center">
                 <input
                   type="checkbox"
-                  checked={aiTargetMuscles.includes(group)}
-                  on:change={() => toggleMuscleGroup(group, aiTargetMuscles, (v) => aiTargetMuscles = v)}
+                  checked={aiTargetMuscles.includes(value)}
+                  on:change={() => toggleMuscleGroup(value, aiTargetMuscles, (v) => aiTargetMuscles = v)}
                   class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                 />
-                <span class="ml-2 text-sm text-gray-700">{group}</span>
+                <span class="ml-2 text-sm text-gray-700">{label}</span>
               </label>
             {/each}
           </div>
@@ -351,18 +439,18 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Available Equipment
+            {exercises_ai_available_equipment()}
           </label>
           <div class="grid grid-cols-2 gap-2">
-            {#each equipmentOptions as item}
+            {#each equipmentOptions as { value, label }}
               <label class="inline-flex items-center">
                 <input
                   type="checkbox"
-                  checked={aiEquipment.includes(item)}
-                  on:change={() => toggleEquipment(item, aiEquipment, (v) => aiEquipment = v)}
+                  checked={aiEquipment.includes(value)}
+                  on:change={() => toggleEquipment(value, aiEquipment, (v) => aiEquipment = v)}
                   class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                 />
-                <span class="ml-2 text-sm text-gray-700">{item}</span>
+                <span class="ml-2 text-sm text-gray-700">{label}</span>
               </label>
             {/each}
           </div>
@@ -370,29 +458,29 @@
 
         <div>
           <label for="ai-difficulty" class="block text-sm font-medium text-gray-700">
-            Difficulty Level
+            {exercises_ai_difficulty()}
           </label>
           <select
             id="ai-difficulty"
             bind:value={aiDifficulty}
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           >
-            {#each difficultyOptions as option}
-              <option value={option}>{option}</option>
+            {#each difficultyOptions as { value, label }}
+              <option {value}>{label}</option>
             {/each}
           </select>
         </div>
 
         <div>
           <label for="ai-considerations" class="block text-sm font-medium text-gray-700">
-            Special Considerations
+            {exercises_ai_considerations()}
           </label>
           <textarea
             id="ai-considerations"
             bind:value={aiConsiderations}
             rows="3"
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            placeholder="Any special requirements or limitations (e.g., low impact, no jumping, etc.)"
+            placeholder={exercises_ai_considerations_placeholder()}
           />
         </div>
 
@@ -402,7 +490,7 @@
             class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             on:click={() => showAIModal = false}
           >
-            Cancel
+            {exercises_cancel()}
           </button>
           <button
             type="button"
@@ -410,7 +498,7 @@
             class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300"
             on:click={generateExercise}
           >
-            {generatingWithAI ? 'Generating...' : 'Generate Exercise'}
+            {generatingWithAI ? exercises_ai_generating() : exercises_ai_generate()}
           </button>
         </div>
       </div>
