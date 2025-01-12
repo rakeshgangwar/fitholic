@@ -62,6 +62,7 @@
   } from '$lib/paraglide/messages';
 
   export let exercise: Exercise | null = null;
+  export let showAIForm = false;
 
   const dispatch = createEventDispatcher<{
     exerciseCreated: void;
@@ -72,6 +73,9 @@
   let error: string | null = null;
   let showAIModal = false;
   let generatingWithAI = false;
+
+  // Add reactive statement to update showAIModal when showAIForm changes
+  $: showAIModal = showAIForm;
 
   // Form fields
   let name = exercise?.name ?? '';
@@ -227,169 +231,208 @@
   }
 </script>
 
-<div class="exercise-form max-w-2xl mx-auto bg-white p-6 rounded-lg shadow">
-  <div class="mb-6 flex justify-between items-center">
-    <h2 class="text-2xl font-bold text-gray-900">
-      {exercise ? exercises_edit() : exercises_create_new()}
-    </h2>
-    <div class="flex space-x-2">
-      {#if !exercise}
-        <button
-          type="button"
-          class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          on:click={() => showAIModal = true}
-        >
-          {exercises_generate_ai()}
-        </button>
-      {/if}
+<div class="exercise-form max-w-3xl mx-auto bg-white rounded-xl shadow-lg">
+  <!-- Header -->
+  <div class="px-6 py-4 border-b border-gray-200">
+    <div class="flex justify-between items-center">
+      <h2 class="text-2xl font-bold text-gray-900">
+        {exercise ? exercises_edit() : exercises_create_new()}
+      </h2>
       <button
-        class="text-gray-600 hover:text-gray-800"
+        class="text-gray-500 hover:text-gray-700 transition-colors duration-200"
         on:click={() => dispatch('cancel')}
       >
-        {exercises_cancel()}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
     </div>
   </div>
 
-  {#if error}
-    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-      <p class="text-sm text-red-600">{error}</p>
-    </div>
-  {/if}
-
-  <form on:submit|preventDefault={handleSubmit} class="space-y-6">
-    <div>
-      <label for="name" class="block text-sm font-medium text-gray-700">
-        {exercises_form_name()} *
-      </label>
-      <input
-        type="text"
-        id="name"
-        bind:value={name}
-        required
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-        placeholder={exercises_form_name_placeholder()}
-      />
-    </div>
-
-    <div>
-      <label for="description" class="block text-sm font-medium text-gray-700">
-        {exercises_form_description()}
-      </label>
-      <textarea
-        id="description"
-        bind:value={description}
-        rows="3"
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-        placeholder={exercises_form_description_placeholder()}
-      />
-    </div>
-
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-2">
-        {exercises_form_muscle_groups()} *
-      </label>
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-        {#each muscleGroupOptions as { value, label }}
-          <label class="inline-flex items-center">
-            <input
-              type="checkbox"
-              checked={muscleGroups.includes(value)}
-              on:change={() => toggleMuscleGroup(value)}
-              class="rounded border-gray-300 text-green-600 focus:ring-green-500"
-            />
-            <span class="ml-2 text-sm text-gray-700">{label}</span>
-          </label>
-        {/each}
+  <!-- Form Content -->
+  <div class="p-6">
+    {#if error}
+      <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-400 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <p class="ml-3 text-sm font-medium text-red-800">{error}</p>
       </div>
-    </div>
+    {/if}
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-2">
-        {exercises_form_equipment()}
-      </label>
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-        {#each equipmentOptions as { value, label }}
-          <label class="inline-flex items-center">
+    <form on:submit|preventDefault={handleSubmit} class="space-y-8">
+      <!-- Basic Information Section -->
+      <div class="space-y-6">
+        <h3 class="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Basic Information</h3>
+        
+        <div class="grid grid-cols-1 gap-6">
+          <!-- Name -->
+          <div>
+            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+              {exercises_form_name()} <span class="text-red-500">*</span>
+            </label>
             <input
-              type="checkbox"
-              checked={equipment.includes(value)}
-              on:change={() => toggleEquipment(value)}
-              class="rounded border-gray-300 text-green-600 focus:ring-green-500"
+              type="text"
+              id="name"
+              bind:value={name}
+              required
+              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 transition-colors duration-200"
+              placeholder={exercises_form_name_placeholder()}
             />
-            <span class="ml-2 text-sm text-gray-700">{label}</span>
-          </label>
-        {/each}
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+              {exercises_form_description()}
+            </label>
+            <textarea
+              id="description"
+              bind:value={description}
+              rows="3"
+              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 transition-colors duration-200"
+              placeholder={exercises_form_description_placeholder()}
+            />
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div>
-      <label for="difficulty" class="block text-sm font-medium text-gray-700">
-        {exercises_form_difficulty_level()}
-      </label>
-      <select
-        id="difficulty"
-        bind:value={difficulty}
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-      >
-        {#each difficultyOptions as { value, label }}
-          <option {value}>{label}</option>
-        {/each}
-      </select>
-    </div>
+      <!-- Categories Section -->
+      <div class="space-y-6">
+        <h3 class="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Categories</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Muscle Groups -->
+          <div class="bg-gray-50 rounded-xl p-4">
+            <label class="block text-sm font-medium text-gray-700 mb-3">
+              {exercises_form_muscle_groups()} <span class="text-red-500">*</span>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              {#each muscleGroupOptions as { value, label }}
+                <label class="relative flex items-start">
+                  <div class="flex items-center h-5">
+                    <input
+                      type="checkbox"
+                      checked={muscleGroups.includes(value)}
+                      on:change={() => toggleMuscleGroup(value)}
+                      class="rounded border-gray-300 text-green-600 focus:ring-green-500 transition-colors duration-200"
+                    />
+                  </div>
+                  <div class="ml-2 text-sm">
+                    <span class="font-medium text-gray-700">{label}</span>
+                  </div>
+                </label>
+              {/each}
+            </div>
+          </div>
 
-    <div>
-      <label for="instructions" class="block text-sm font-medium text-gray-700">
-        {exercises_form_instructions()}
-      </label>
-      <textarea
-        id="instructions"
-        bind:value={instructions}
-        rows="4"
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-        placeholder={exercises_form_instructions_placeholder()}
-      />
-    </div>
+          <!-- Equipment -->
+          <div class="bg-gray-50 rounded-xl p-4">
+            <label class="block text-sm font-medium text-gray-700 mb-3">
+              {exercises_form_equipment()}
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              {#each equipmentOptions as { value, label }}
+                <label class="relative flex items-start">
+                  <div class="flex items-center h-5">
+                    <input
+                      type="checkbox"
+                      checked={equipment.includes(value)}
+                      on:change={() => toggleEquipment(value)}
+                      class="rounded border-gray-300 text-green-600 focus:ring-green-500 transition-colors duration-200"
+                    />
+                  </div>
+                  <div class="ml-2 text-sm">
+                    <span class="font-medium text-gray-700">{label}</span>
+                  </div>
+                </label>
+              {/each}
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <div>
-      <label for="video-url" class="block text-sm font-medium text-gray-700">
-        {exercises_form_video_url()}
-      </label>
-      <input
-        type="url"
-        id="video-url"
-        bind:value={videoUrl}
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-        placeholder={exercises_form_video_url_placeholder()}
-      />
-    </div>
+      <!-- Details Section -->
+      <div class="space-y-6">
+        <h3 class="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Exercise Details</h3>
+        
+        <div class="grid grid-cols-1 gap-6">
+          <!-- Difficulty -->
+          <div>
+            <label for="difficulty" class="block text-sm font-medium text-gray-700 mb-1">
+              {exercises_form_difficulty_level()}
+            </label>
+            <select
+              id="difficulty"
+              bind:value={difficulty}
+              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 transition-colors duration-200"
+            >
+              {#each difficultyOptions as { value, label }}
+                <option {value}>{label}</option>
+              {/each}
+            </select>
+          </div>
 
-    <div class="flex justify-end space-x-3">
-      <button
-        type="button"
-        class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-        on:click={() => dispatch('cancel')}
-      >
-        {exercises_cancel()}
-      </button>
-      <button
-        type="submit"
-        disabled={loading}
-        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-300"
-      >
-        {loading ? exercises_saving() : exercises_save()}
-      </button>
-    </div>
-  </form>
+          <!-- Instructions -->
+          <div>
+            <label for="instructions" class="block text-sm font-medium text-gray-700 mb-1">
+              {exercises_form_instructions()}
+            </label>
+            <textarea
+              id="instructions"
+              bind:value={instructions}
+              rows="4"
+              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 transition-colors duration-200"
+              placeholder={exercises_form_instructions_placeholder()}
+            />
+          </div>
+
+          <!-- Video URL -->
+          <div>
+            <label for="video-url" class="block text-sm font-medium text-gray-700 mb-1">
+              {exercises_form_video_url()}
+            </label>
+            <input
+              type="url"
+              id="video-url"
+              bind:value={videoUrl}
+              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 transition-colors duration-200"
+              placeholder={exercises_form_video_url_placeholder()}
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="pt-6 border-t border-gray-200">
+        <div class="flex justify-end space-x-3">
+          <button
+            type="button"
+            class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
+            on:click={() => dispatch('cancel')}
+          >
+            {exercises_cancel()}
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-300 transition-all duration-200"
+          >
+            {loading ? exercises_saving() : exercises_save()}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 
 {#if showAIModal}
-  <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-xl w-full p-6">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-medium text-gray-900">{exercises_ai_modal_title()}</h3>
+  <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-xl w-full p-6 shadow-xl">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xl font-semibold text-gray-900">{exercises_ai_modal_title()}</h3>
         <button
-          class="text-gray-400 hover:text-gray-500"
+          class="text-gray-400 hover:text-gray-500 transition-colors duration-200"
           on:click={() => showAIModal = false}
         >
           <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -399,20 +442,24 @@
       </div>
 
       {#if error}
-        <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p class="text-sm text-red-600">{error}</p>
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-400 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+          <p class="ml-3 text-sm font-medium text-red-800">{error}</p>
         </div>
       {/if}
 
-      <div class="space-y-4">
+      <div class="space-y-6">
+        <!-- Exercise Type -->
         <div>
-          <label for="ai-exercise-type" class="block text-sm font-medium text-gray-700">
+          <label for="ai-exercise-type" class="block text-sm font-medium text-gray-700 mb-1">
             {exercises_ai_exercise_type()}
           </label>
           <select
             id="ai-exercise-type"
             bind:value={aiExerciseType}
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors duration-200"
           >
             {#each exerciseTypes as { value, label }}
               <option {value}>{label}</option>
@@ -420,52 +467,63 @@
           </select>
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            {exercises_ai_target_muscles()} *
+        <!-- Target Muscles -->
+        <div class="bg-gray-50 rounded-xl p-4">
+          <label class="block text-sm font-medium text-gray-700 mb-3">
+            {exercises_ai_target_muscles()} <span class="text-red-500">*</span>
           </label>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-2 gap-3">
             {#each muscleGroupOptions as { value, label }}
-              <label class="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  checked={aiTargetMuscles.includes(value)}
-                  on:change={() => toggleMuscleGroup(value, aiTargetMuscles, (v) => aiTargetMuscles = v)}
-                  class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span class="ml-2 text-sm text-gray-700">{label}</span>
+              <label class="relative flex items-start">
+                <div class="flex items-center h-5">
+                  <input
+                    type="checkbox"
+                    checked={aiTargetMuscles.includes(value)}
+                    on:change={() => toggleMuscleGroup(value, aiTargetMuscles, (v) => aiTargetMuscles = v)}
+                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 transition-colors duration-200"
+                  />
+                </div>
+                <div class="ml-2 text-sm">
+                  <span class="font-medium text-gray-700">{label}</span>
+                </div>
               </label>
             {/each}
           </div>
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+        <!-- Available Equipment -->
+        <div class="bg-gray-50 rounded-xl p-4">
+          <label class="block text-sm font-medium text-gray-700 mb-3">
             {exercises_ai_available_equipment()}
           </label>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-2 gap-3">
             {#each equipmentOptions as { value, label }}
-              <label class="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  checked={aiEquipment.includes(value)}
-                  on:change={() => toggleEquipment(value, aiEquipment, (v) => aiEquipment = v)}
-                  class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span class="ml-2 text-sm text-gray-700">{label}</span>
+              <label class="relative flex items-start">
+                <div class="flex items-center h-5">
+                  <input
+                    type="checkbox"
+                    checked={aiEquipment.includes(value)}
+                    on:change={() => toggleEquipment(value, aiEquipment, (v) => aiEquipment = v)}
+                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 transition-colors duration-200"
+                  />
+                </div>
+                <div class="ml-2 text-sm">
+                  <span class="font-medium text-gray-700">{label}</span>
+                </div>
               </label>
             {/each}
           </div>
         </div>
 
+        <!-- Difficulty -->
         <div>
-          <label for="ai-difficulty" class="block text-sm font-medium text-gray-700">
+          <label for="ai-difficulty" class="block text-sm font-medium text-gray-700 mb-1">
             {exercises_ai_difficulty()}
           </label>
           <select
             id="ai-difficulty"
             bind:value={aiDifficulty}
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors duration-200"
           >
             {#each difficultyOptions as { value, label }}
               <option {value}>{label}</option>
@@ -473,23 +531,25 @@
           </select>
         </div>
 
+        <!-- Considerations -->
         <div>
-          <label for="ai-considerations" class="block text-sm font-medium text-gray-700">
+          <label for="ai-considerations" class="block text-sm font-medium text-gray-700 mb-1">
             {exercises_ai_considerations()}
           </label>
           <textarea
             id="ai-considerations"
             bind:value={aiConsiderations}
             rows="3"
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors duration-200"
             placeholder={exercises_ai_considerations_placeholder()}
           />
         </div>
 
-        <div class="flex justify-end space-x-3 mt-6">
+        <!-- Modal Actions -->
+        <div class="flex justify-end space-x-3 mt-8">
           <button
             type="button"
-            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
             on:click={() => showAIModal = false}
           >
             {exercises_cancel()}
@@ -497,7 +557,7 @@
           <button
             type="button"
             disabled={generatingWithAI}
-            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300"
+            class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300 transition-all duration-200"
             on:click={generateExercise}
           >
             {generatingWithAI ? exercises_ai_generating() : exercises_ai_generate()}

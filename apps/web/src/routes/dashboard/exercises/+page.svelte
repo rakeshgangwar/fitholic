@@ -7,6 +7,7 @@
   import { 
     exercises_title,
     exercises_add,
+    exercises_generate_ai,
     common_error_generic
   } from '$lib/paraglide/messages';
 
@@ -15,6 +16,7 @@
   let error: string | null = null;
   let showForm = false;
   let editingExercise: Exercise | null = null;
+  let showAIForm = false;
 
   onMount(async () => {
     await loadExercises();
@@ -54,15 +56,28 @@
       <h1 class="text-3xl font-bold leading-tight text-gray-900">
         {exercises_title()}
       </h1>
-      <button
-        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-        on:click={() => {
-          editingExercise = null;
-          showForm = true;
-        }}
-      >
-        {exercises_add()}
-      </button>
+      <div class="flex space-x-3">
+        <button
+          class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          on:click={() => {
+            editingExercise = null;
+            showForm = true;
+            showAIForm = true;
+          }}
+        >
+          {exercises_generate_ai()}
+        </button>
+        <button
+          class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          on:click={() => {
+            editingExercise = null;
+            showForm = true;
+            showAIForm = false;
+          }}
+        >
+          {exercises_add()}
+        </button>
+      </div>
     </header>
 
     {#if error}
@@ -84,9 +99,11 @@
       {#if showForm}
         <ExerciseForm
           exercise={editingExercise}
+          showAIForm={showAIForm}
           on:exerciseCreated={handleExerciseCreated}
           on:cancel={() => {
             showForm = false;
+            showAIForm = false;
             editingExercise = null;
           }}
         />

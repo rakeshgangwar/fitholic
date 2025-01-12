@@ -34,35 +34,32 @@ exercise_prompt = ChatPromptTemplate.from_messages([
     Provide a complete exercise description that includes all necessary details for proper execution.""")
 ])
 
+
 async def find_exercise_video(exercise_name: str, target_muscles: List[str]) -> Optional[str]:
     """
     Search for a relevant exercise demonstration video on YouTube.
+    Returns the first regular YouTube video URL found, or None if no regular videos are found.
     """
     try:
         youtube_tool = YouTubeSearchTool()
-        search_query = f"how to do {exercise_name} exercise {' '.join(target_muscles)} proper form, 10"
+        search_query = f"how to do {exercise_name} exercise {' '.join(target_muscles)} proper form"
         results = youtube_tool.run(search_query)
         
-        # Handle string representation of a list
         try:
             import ast
             urls = ast.literal_eval(results)
-            if isinstance(urls, list) and urls:
-                # Get first URL from the list
-                first_url = urls[0]
-                # Remove any query parameters
-                if 'youtube.com/watch?v=' in first_url:
-                    video_id = first_url.split('watch?v=')[1].split('&')[0]
-                    return f'https://youtube.com/watch?v={video_id}'
-                elif 'youtube.com/shorts/' in first_url:
-                    video_id = first_url.split('shorts/')[1].split('&')[0]
-                    return f'https://youtube.com/shorts/{video_id}'
+            if isinstance(urls, list):
+                # Find first regular YouTube URL (not shorts)
+                for url in urls:
+                    if 'youtube.com/watch?v=' in url:
+                        video_id = url.split('watch?v=')[1].split('&')[0]
+                        return f'https://youtube.com/watch?v={video_id}'
         except (ValueError, SyntaxError):
             logger.warning("Could not parse results as list, skipping")
             
         return None
     except Exception as e:
-        print(f"Failed to fetch YouTube video: {str(e)}")
+        logger.error(f"Failed to fetch YouTube video: {str(e)}")
         return None
 
 async def generate_exercise_with_ai(
