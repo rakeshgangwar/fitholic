@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { i18n } from '$lib/i18n';
+	import { ParaglideJS } from '@inlang/paraglide-sveltekit';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
@@ -45,8 +47,10 @@
 	}
 </script>
 
-{#if !initializing}
-	<div class="min-h-screen bg-gray-100">
-		<slot />
-	</div>
-{/if}
+<ParaglideJS {i18n}>
+	{#if !initializing}
+		<div class="min-h-screen bg-gray-100">
+			<slot></slot>
+		</div>
+	{/if}
+</ParaglideJS>

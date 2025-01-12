@@ -1,118 +1,182 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-    import { Button, Label, Select } from 'flowbite-svelte';
+    import { Button, Label, Toggle } from 'flowbite-svelte';
     import type { UserProfile, UserProfileUpdate } from '$lib/types';
     import { api } from '$lib/api';
+    import { theme } from '$lib/stores/theme';
+    import { language } from '$lib/stores/language';
+    import { units } from '$lib/stores/units';
+    import { 
+        settings_theme_options_light,
+        settings_theme_options_dark,
+        settings_theme_options_system,
+        settings_language_options_en,
+        settings_language_options_es,
+        settings_language_options_fr,
+        settings_language_options_de,
+        settings_language_options_hi,
+        settings_errors_save_theme_failed,
+        settings_errors_save_language_failed,
+        settings_errors_save_units_failed,
+        settings_theme_label,
+        settings_theme_description,
+        settings_language_label,
+        settings_language_description,
+        settings_units_label,
+        settings_units_metric,
+        settings_units_imperial
+    } from '$lib/paraglide/messages';
 
     export let profile: UserProfile;
 
     const dispatch = createEventDispatcher();
-    let saving = false;
     let error: string | null = null;
 
-    let formData: UserProfileUpdate = {
-        theme: profile.theme || 'system',
-        language: profile.language || 'en',
-        units: profile.units || 'metric'
-    };
+    // Initialize stores with profile values
+    $: {
+        if (profile.theme && (profile.theme === 'light' || profile.theme === 'dark' || profile.theme === 'system')) {
+            theme.set(profile.theme);
+        }
+        if (profile.language && (profile.language === 'en' || profile.language === 'es' || profile.language === 'fr' || profile.language === 'de' || profile.language === 'hi')) {
+            language.set(profile.language);
+        }
+        if (profile.units && (profile.units === 'metric' || profile.units === 'imperial')) {
+            units.set(profile.units);
+        }
+    }
 
     const themeOptions = [
-        { value: 'light', label: 'Light' },
-        { value: 'dark', label: 'Dark' },
-        { value: 'system', label: 'System Default' }
+        { value: 'light' as const, label: settings_theme_options_light() },
+        { value: 'dark' as const, label: settings_theme_options_dark() },
+        { value: 'system' as const, label: settings_theme_options_system() }
     ];
 
     const languageOptions = [
-        { value: 'en', label: 'English' },
-        { value: 'es', label: 'Español' },
-        { value: 'fr', label: 'Français' },
-        { value: 'de', label: 'Deutsch' }
+        { value: 'en' as const, label: settings_language_options_en() },
+        { value: 'es' as const, label: settings_language_options_es() },
+        { value: 'fr' as const, label: settings_language_options_fr() },
+        { value: 'de' as const, label: settings_language_options_de() },
+        { value: 'hi' as const, label: settings_language_options_hi() }
     ];
 
-    const unitOptions = [
-        { value: 'metric', label: 'Metric (kg, cm)' },
-        { value: 'imperial', label: 'Imperial (lbs, inches)' }
-    ];
+    // Debounce function to prevent too many API calls
+    function debounce(func: Function, wait: number) {
+        let timeout: NodeJS.Timeout;
+        return function executedFunction(...args: any[]) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
 
-    async function handleSubmit() {
+    // Update theme with immediate effect and persist to backend
+    const updateTheme = async (newTheme: 'light' | 'dark' | 'system') => {
         try {
-            saving = true;
             error = null;
-            await api.put('/profiles/me', formData);
+            theme.set(newTheme);
+            await api.put('/profiles/me', { theme: newTheme });
             dispatch('saved');
         } catch (e: any) {
-            error = e.message || 'Failed to save settings';
-        } finally {
-            saving = false;
+            error = e.message || settings_errors_save_theme_failed();
+            // Revert on error
+            if (profile.theme && (profile.theme === 'light' || profile.theme === 'dark' || profile.theme === 'system')) {
+                theme.set(profile.theme);
+            }
         }
-    }
+    };
+
+    // Debounced theme update
+    const debouncedThemeUpdate = debounce(updateTheme, 300);
+
+    // Update language with immediate effect
+    const updateLanguage = async (newLanguage: 'en' | 'es' | 'fr' | 'de') => {
+        try {
+            error = null;
+            language.set(newLanguage);
+            await api.put('/profiles/me', { language: newLanguage });
+            dispatch('saved');
+        } catch (e: any) {
+            error = e.message || settings_errors_save_language_failed();
+            if (profile.language && (profile.language === 'en' || profile.language === 'es' || profile.language === 'fr' || profile.language === 'de')) {
+                language.set(profile.language);
+            }
+        }
+    };
+
+    // Toggle between metric and imperial units
+    const toggleUnits = async () => {
+        const newUnits = $units === 'metric' ? 'imperial' : 'metric';
+        try {
+            error = null;
+            units.set(newUnits);
+            await api.put('/profiles/me', { units: newUnits });
+            dispatch('saved');
+        } catch (e: any) {
+            error = e.message || settings_errors_save_units_failed();
+            if (profile.units && (profile.units === 'metric' || profile.units === 'imperial')) {
+                units.set(profile.units);
+            }
+        }
+    };
 </script>
 
-<form on:submit|preventDefault={handleSubmit} class="space-y-6">
+<div class="space-y-6">
     {#if error}
-        <div class="text-red-500 mb-4">{error}</div>
+        <div class="text-red-500 mb-4 rounded-md bg-red-50 p-2">{error}</div>
     {/if}
 
-    <div class="space-y-4">
+    <div class="space-y-6">
         <!-- Theme -->
-        <div>
-            <Label for="theme">Theme</Label>
-            <select 
-                id="theme" 
-                bind:value={formData.theme}
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            >
+        <div class="flex flex-col gap-4">
+            <Label>{settings_theme_label()}</Label>
+            <div class="flex gap-4">
                 {#each themeOptions as option}
-                    <option value={option.value}>{option.label}</option>
+                    <button
+                        class="px-4 py-2 rounded-md {$theme === option.value ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+                        on:click={() => debouncedThemeUpdate(option.value)}
+                    >
+                        {option.label}
+                    </button>
                 {/each}
-            </select>
-            <p class="text-sm text-gray-500 mt-1">
-                Choose your preferred app theme
-            </p>
+            </div>
+            <p class="text-sm text-gray-500">{settings_theme_description()}</p>
         </div>
 
         <!-- Language -->
-        <div>
-            <Label for="language">Language</Label>
-            <select 
-                id="language" 
-                bind:value={formData.language}
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            >
+        <div class="flex flex-col gap-4">
+            <Label>{settings_language_label()}</Label>
+            <div class="flex gap-4 flex-wrap">
                 {#each languageOptions as option}
-                    <option value={option.value}>{option.label}</option>
+                    <button
+                        class="px-4 py-2 rounded-md {$language === option.value ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+                        on:click={() => updateLanguage(option.value)}
+                    >
+                        {option.label}
+                    </button>
                 {/each}
-            </select>
-            <p class="text-sm text-gray-500 mt-1">
-                Select your preferred language
-            </p>
+            </div>
+            <p class="text-sm text-gray-500">{settings_language_description()}</p>
         </div>
 
-        <!-- Units -->
-        <div>
-            <Label for="units">Measurement Units</Label>
-            <select 
-                id="units" 
-                bind:value={formData.units}
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        <!-- Units Toggle -->
+        <div class="flex items-center justify-between">
+            <div>
+                <Label>{settings_units_label()}</Label>
+                <p class="text-sm text-gray-500">
+                    {$units === 'metric' ? settings_units_metric() : settings_units_imperial()}
+                </p>
+            </div>
+            <Toggle
+                checked={$units === 'imperial'}
+                on:change={toggleUnits}
+                class="w-20"
             >
-                {#each unitOptions as option}
-                    <option value={option.value}>{option.label}</option>
-                {/each}
-            </select>
-            <p class="text-sm text-gray-500 mt-1">
-                Choose your preferred measurement system
-            </p>
+                <div slot="offLabel">{settings_units_metric()}</div>
+                <div slot="default">{$units === 'metric' ? settings_units_metric() : settings_units_imperial()}</div>
+            </Toggle>
         </div>
     </div>
-
-    <div class="flex justify-end mt-6">
-        <button 
-            type="submit" 
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            disabled={saving}
-        >
-            {saving ? 'Saving...' : 'Save Changes'}
-        </button>
-    </div>
-</form> 
+</div> 

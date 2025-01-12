@@ -2,6 +2,7 @@
   import { authStore } from '$lib/stores/auth';
   import { signOut } from '$lib/utils/auth';
   import { goto } from '$app/navigation';
+  import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
 
   async function handleSignOut() {
     try {
@@ -45,6 +46,7 @@
           </div>
         </div>
         <div class="flex items-center space-x-4">
+          <LanguageSwitcher />
           <a 
             href="/dashboard/profile"
             class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"

@@ -31,3 +31,6 @@ vite.config.ts.timestamp-*
 # Keep these files
 !src/lib/
 !src/lib/**/*
+
+# Paraglide
+src/lib/paraglide

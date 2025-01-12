@@ -8,6 +8,7 @@
     import AppSettings from '$lib/components/profile/AppSettings.svelte';
     import Notifications from '$lib/components/profile/Notifications.svelte';
     import Privacy from '$lib/components/profile/Privacy.svelte';
+    import { settings_title, profile_personal_info_tab, profile_app_settings_tab, profile_notifications_tab, profile_privacy_tab, common_error_save_failed, common_error_generic, common_retry } from '$lib/paraglide/messages';
 
     let profile: UserProfile | null = null;
     let activeTab: 'personal' | 'settings' | 'notifications' | 'privacy' = 'personal';
@@ -44,7 +45,7 @@
             profile = await api.post('/profiles/me', defaultProfile);
             error = null;
         } catch (e: any) {
-            error = e.message || 'Failed to create profile';
+            error = e.message || common_error_save_failed();
             throw e;
         }
     }
@@ -64,7 +65,7 @@
                 }
             }
         } catch (e: any) {
-            error = e.message || 'Failed to load profile';
+            error = e.message || common_error_generic();
         } finally {
             loading = false;
         }
@@ -80,7 +81,7 @@
     <div class="py-10">
         <header>
             <h1 class="text-3xl font-bold leading-tight text-gray-900">
-                Profile Settings
+                {settings_title()}
             </h1>
         </header>
 
@@ -101,7 +102,7 @@
                     </div>
                 </div>
                 <Button color="primary" class="mt-4" on:click={() => window.location.reload()}>
-                    Retry
+                    {common_retry()}
                 </Button>
             </div>
         {:else if profile}
@@ -111,25 +112,25 @@
                         class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm {activeTab === 'personal' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
                         on:click={() => activeTab = 'personal'}
                     >
-                        Personal Info
+                        {profile_personal_info_tab()}
                     </button>
                     <button 
                         class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm {activeTab === 'settings' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
                         on:click={() => activeTab = 'settings'}
                     >
-                        App Settings
+                        {profile_app_settings_tab()}
                     </button>
                     <button 
                         class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm {activeTab === 'notifications' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
                         on:click={() => activeTab = 'notifications'}
                     >
-                        Notifications
+                        {profile_notifications_tab()}
                     </button>
                     <button 
                         class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm {activeTab === 'privacy' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
                         on:click={() => activeTab = 'privacy'}
                     >
-                        Privacy
+                        {profile_privacy_tab()}
                     </button>
                 </nav>
             </div>
