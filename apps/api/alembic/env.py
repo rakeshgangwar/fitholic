@@ -16,6 +16,7 @@ from app.models.exercise import Exercise  # Added Exercise model import
 from app.models.workout import WorkoutTemplate, WorkoutLog  # Added Workout models import
 from app.models.user_profile import UserProfile  # Added UserProfile model import
 from app.models.user_measurement import UserMeasurement  # Added UserMeasurement model import
+from app.models.chat import ChatSession, ChatMessage, ChatContext  # Add chat models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -79,7 +80,9 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, 
+            target_metadata=target_metadata,
+            compare_type=True  # Add type comparison
         )
 
         with context.begin_transaction():

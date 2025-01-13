@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.9] - 2024-01-13
+
+### Added
+- AI-powered Fitness Chatbot implementation
+  - New chat-based interface for fitness assistance
+  - LangGraph-based conversation workflow management
+  - Core components:
+    - Message parser for intent identification
+    - Exercise creator for personalized exercises
+    - Workout generator for quick workout plans
+    - Motivation node for general fitness guidance
+  - Database models for chat session management:
+    - Chat sessions tracking
+    - Message history storage
+    - Conversation context management
+  - API endpoints for chat functionality:
+    - Session creation and management
+    - Message processing
+    - Chat history retrieval
+
+### Changed
+- Enhanced AI service architecture with LangGraph integration
+- Improved conversation state management
+- Updated database schema for chat functionality
+
+### Technical Details
+- Implemented stateful conversation handling
+- Added robust error handling and recovery
+- Enhanced logging for debugging and monitoring
+- Improved type safety with Pydantic models
+
 ## [2.0.8] - 2024-01-13
 
 ### Changed

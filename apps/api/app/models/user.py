@@ -21,4 +21,5 @@ class User(Base):
     # Add relationships
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     workout_templates = relationship("WorkoutTemplate", back_populates="user")
-    workout_logs = relationship("WorkoutLog", back_populates="user") 
+    workout_logs = relationship("WorkoutLog", back_populates="user")
+    chat_sessions = relationship("ChatSession", back_populates="user", cascade="all, delete-orphan") 

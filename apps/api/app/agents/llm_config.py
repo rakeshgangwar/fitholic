@@ -85,6 +85,11 @@ WORKFLOW_CONFIGS = {
         model_name="gpt-4o-mini",
         temperature=0.9,  # Higher temperature for more creative motivation
         max_tokens=1000   # Shorter, punchier motivational messages
+    ),
+    "chat": OpenAIConfig(
+        model_name="gpt-4o",
+        temperature=0.7,  # Balanced temperature for general chat
+        max_tokens=1000   # Standard message length
     )
 }
 
