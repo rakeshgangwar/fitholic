@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.8] - 2024-01-13
+
+### Changed
+- Enhanced exercise video player functionality
+  - Replaced inline iframes with video thumbnails for better performance
+  - Added play button overlay with hover effect
+  - Implemented popup video player with autoplay
+  - Added click outside to close functionality for video popup
+  - Improved keyboard accessibility for video thumbnails
+  - Enhanced video player UI with better spacing and transitions
+  - Added loading state for video thumbnails
+
 ## [2.0.7] - 2024-01-13
 
 ### Changed

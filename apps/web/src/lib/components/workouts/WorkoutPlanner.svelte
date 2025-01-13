@@ -13,7 +13,7 @@
   export let loading = false;
   
   let showForm = false;
-  let editingTemplate: WorkoutTemplate | null = null;
+  let editingSession: WorkoutTemplate | null = null;
   let exercises: Exercise[] = [];
   let selectedExercises: TemplateExercise[] = [];
   let name = '';
@@ -35,16 +35,16 @@
     description = '';
     difficulty = 'beginner';
     selectedExercises = [];
-    editingTemplate = null;
+    editingSession = null;
     showForm = false;
   }
 
-  function startEditing(template: WorkoutTemplate) {
-    editingTemplate = template;
-    name = template.name;
-    description = template.description || '';
-    difficulty = template.difficulty;
-    selectedExercises = template.exercises;
+  function startEditing(session: WorkoutTemplate) {
+    editingSession = session;
+    name = session.name;
+    description = session.description || '';
+    difficulty = session.difficulty;
+    selectedExercises = session.exercises;
     showForm = true;
   }
 
@@ -64,26 +64,26 @@
     };
 
     try {
-      if (editingTemplate) {
-        await api.put(`/workouts/templates/${editingTemplate.template_id}`, workoutData);
+      if (editingSession) {
+        await api.put(`/workouts/templates/${editingSession.template_id}`, workoutData);
       } else {
         await api.post('/workouts/templates', workoutData);
       }
       dispatch('templateCreated');
       resetForm();
     } catch (err) {
-      error = 'Failed to save workout template';
+      error = 'Failed to save workout session';
     }
   }
 
-  async function deleteTemplate(templateId: string) {
-    if (!confirm('Are you sure you want to delete this template?')) return;
+  async function deleteSession(sessionId: string) {
+    if (!confirm('Are you sure you want to delete this session?')) return;
 
     try {
-      await api.delete(`/workouts/templates/${templateId}`);
+      await api.delete(`/workouts/templates/${sessionId}`);
       dispatch('templateDeleted');
     } catch (err) {
-      error = 'Failed to delete template';
+      error = 'Failed to delete session';
     }
   }
 
@@ -118,173 +118,279 @@
     if (!isNaN(selectedIndex)) {
       addExercise(exercises[selectedIndex]);
     }
-    select.value = ''; // Reset select after adding
+    select.value = '';
   }
 
-  function handleNumberInput(event: Event, index: number, field: string) {
-    const input = event.target as HTMLInputElement;
-    const value = parseInt(input.value);
-    if (!isNaN(value)) {
-      updateExercise(index, field, value);
+  function getDifficultyColor(difficulty: string): string {
+    switch (difficulty) {
+      case 'beginner':
+        return 'bg-green-100 text-green-800';
+      case 'intermediate':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'advanced':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   }
 </script>
 
 {#if showForm}
-  <div class="workout-planner">
-    <div class="form-header">
-      <h2>{editingTemplate ? 'Edit' : 'Create'} Workout Template</h2>
-      <button type="button" class="secondary" on:click={resetForm}>Back to Templates</button>
+  <div class="max-w-3xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-semibold text-gray-900">
+        {editingSession ? 'Edit' : 'Create'} Workout Session
+      </h2>
+      <button
+        type="button"
+        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        on:click={resetForm}
+      >
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        Back to Sessions
+      </button>
     </div>
 
     {#if error}
-      <div class="error">{error}</div>
+      <div class="mb-6 rounded-md bg-red-50 p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm font-medium text-red-800">{error}</p>
+          </div>
+        </div>
+      </div>
     {/if}
 
-    <form on:submit|preventDefault={handleSubmit}>
-      <div class="form-group">
-        <label for="name">Workout Name *</label>
+    <form on:submit|preventDefault={handleSubmit} class="space-y-6 bg-white rounded-xl shadow-sm px-6 py-8">
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700">Session Name *</label>
         <input
           type="text"
           id="name"
           bind:value={name}
           required
+          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           placeholder="e.g., Full Body Workout"
         />
       </div>
 
-      <div class="form-group">
-        <label for="description">Description</label>
+      <div>
+        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
         <textarea
           id="description"
           bind:value={description}
-          placeholder="Describe your workout..."
+          rows="3"
+          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          placeholder="Describe your workout session..."
         />
       </div>
 
-      <div class="form-group">
-        <label for="difficulty">Difficulty *</label>
-        <select id="difficulty" bind:value={difficulty}>
+      <div>
+        <label for="difficulty" class="block text-sm font-medium text-gray-700">Difficulty *</label>
+        <select
+          id="difficulty"
+          bind:value={difficulty}
+          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        >
           <option value="beginner">Beginner</option>
           <option value="intermediate">Intermediate</option>
           <option value="advanced">Advanced</option>
         </select>
       </div>
 
-      <div class="exercises-section">
-        <h3>Exercises</h3>
-        
-        <div class="exercise-picker">
-          <label>Add Exercise:</label>
-          <select on:change={handleExerciseSelect}>
-            <option value="">Select an exercise...</option>
-            {#each exercises as exercise, i}
-              <option value={i}>{exercise.name}</option>
-            {/each}
-          </select>
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-gray-900">Exercises</h3>
+          <div class="relative">
+            <select
+              on:change={handleExerciseSelect}
+              class="block w-64 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            >
+              <option value="">Add Exercise...</option>
+              {#each exercises as exercise, i}
+                <option value={i}>{exercise.name}</option>
+              {/each}
+            </select>
+          </div>
         </div>
 
         {#if selectedExercises.length > 0}
-          <div class="selected-exercises">
+          <div class="space-y-4">
             {#each selectedExercises as exercise, i}
-              <div class="exercise-item">
-                <div class="exercise-header">
-                  <span>{exercises.find(e => e.exercise_id === exercise.exercise_id)?.name}</span>
-                  <button type="button" class="danger" on:click={() => removeExercise(i)}>Remove</button>
+              <div class="bg-gray-50 rounded-lg p-4">
+                <div class="flex justify-between items-start mb-4">
+                  <h4 class="text-sm font-medium text-gray-900">
+                    {exercises.find(e => e.exercise_id === exercise.exercise_id)?.name}
+                  </h4>
+                  <button
+                    type="button"
+                    class="inline-flex items-center p-1.5 border border-transparent rounded-full text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    on:click={() => removeExercise(i)}
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
                 </div>
-                <div class="exercise-details">
-                  <label>
-                    Sets:
+                <div class="grid grid-cols-3 gap-4">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500">Sets</label>
                     <input
                       type="number"
                       min="1"
                       bind:value={exercise.sets}
-                      on:input={(e) => handleNumberInput(e, i, 'sets')}
+                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     />
-                  </label>
-                  <label>
-                    Reps:
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500">Reps</label>
                     <input
                       type="number"
                       min="1"
                       bind:value={exercise.reps}
-                      on:input={(e) => handleNumberInput(e, i, 'reps')}
+                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     />
-                  </label>
-                  <label>
-                    Rest (seconds):
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500">Rest (sec)</label>
                     <input
                       type="number"
                       min="0"
                       step="5"
                       bind:value={exercise.rest_time}
-                      on:input={(e) => handleNumberInput(e, i, 'rest_time')}
+                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     />
-                  </label>
+                  </div>
                 </div>
               </div>
             {/each}
           </div>
         {:else}
-          <p class="no-exercises">No exercises added yet</p>
+          <div class="text-center py-12 bg-gray-50 rounded-lg">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            <p class="mt-2 text-sm text-gray-500">No exercises added yet</p>
+          </div>
         {/if}
       </div>
 
-      <div class="form-actions">
-        <button type="submit" disabled={loading}>
-          {loading ? 'Saving...' : editingTemplate ? 'Update Workout' : 'Create Workout'}
+      <div class="flex justify-end">
+        <button
+          type="submit"
+          disabled={loading}
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+        >
+          {loading ? 'Saving...' : editingSession ? 'Update Session' : 'Create Session'}
         </button>
       </div>
     </form>
   </div>
 {:else}
-  <div class="templates-list">
-    <div class="templates-header">
-      <h2>Your Workout Templates</h2>
-      <button on:click={() => showForm = true}>Create Template</button>
-    </div>
-
+  <div>
     {#if loading}
-      <div class="loading">Loading templates...</div>
+      <div class="flex justify-center items-center py-12">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-green-500"></div>
+        <p class="mt-4 text-gray-500 text-sm">Loading sessions...</p>
+      </div>
     {:else if templates.length === 0}
-      <div class="no-templates">
-        <p>You haven't created any workout templates yet.</p>
-        <button on:click={() => showForm = true}>Create Your First Template</button>
+      <div class="text-center py-12 bg-white rounded-xl shadow-sm">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No workout sessions</h3>
+        <p class="mt-1 text-sm text-gray-500">Get started by creating a new workout session.</p>
+        <div class="mt-6">
+          <button
+            type="button"
+            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            on:click={() => showForm = true}
+          >
+            <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Create Session
+          </button>
+        </div>
       </div>
     {:else}
-      <div class="templates-grid">
-        {#each templates as template}
-          <div class="template-card">
-            <div class="template-header">
-              <h3>{template.name}</h3>
-              <span class="difficulty {template.difficulty}">
-                {template.difficulty}
-              </span>
+      <div class="flex justify-end mb-6">
+        <button
+          type="button"
+          class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          on:click={() => showForm = true}
+        >
+          <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          Create Session
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {#each templates as session}
+          <div class="bg-white overflow-hidden rounded-xl shadow-sm divide-y divide-gray-200 group hover:shadow-md transition-all duration-300">
+            <div class="px-6 py-5">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 
+                    class="text-lg font-semibold text-gray-900 group-hover:text-green-600 transition-colors duration-200 cursor-pointer"
+                    on:click={() => window.location.href = `/dashboard/workouts/${session.template_id}`}
+                    on:keypress={(e) => e.key === 'Enter' && (window.location.href = `/dashboard/workouts/${session.template_id}`)}
+                    tabindex="0"
+                    role="link"
+                  >
+                    {session.name}
+                  </h3>
+                  <p class="mt-1 text-sm text-gray-500 line-clamp-2">{session.description || 'No description'}</p>
+                </div>
+                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {getDifficultyColor(session.difficulty)}">
+                  {session.difficulty}
+                </span>
+              </div>
             </div>
-            {#if template.description}
-              <p class="description">{template.description}</p>
-            {/if}
-            <div class="exercises-count">
-              {template.exercises.length} exercise{template.exercises.length === 1 ? '' : 's'}
-            </div>
-            <div class="template-actions">
+            <div class="px-6 py-4">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-500">{session.exercises.length} exercises</span>
+                <div class="flex space-x-2">
+                  <button
+                    type="button"
+                    class="inline-flex items-center rounded-lg bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                    on:click={() => startEditing(session)}
+                  >
+                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors duration-200"
+                    on:click={() => deleteSession(session.template_id)}
+                  >
+                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
               <button
-                class="secondary"
-                on:click={() => startEditing(template)}
+                class="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+                on:click={() => dispatch('templateSelected', session)}
               >
-                Edit
-              </button>
-              <button
-                class="secondary"
-                on:click={() => dispatch('templateSelected', template)}
-              >
-                Start Workout
-              </button>
-              <button
-                class="danger"
-                on:click={() => deleteTemplate(template.template_id)}
-              >
-                Delete
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Start Session
               </button>
             </div>
           </div>
@@ -295,202 +401,10 @@
 {/if}
 
 <style>
-  .workout-planner {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  .form-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-  }
-
-  .error {
-    color: red;
-    margin-bottom: 1rem;
-    padding: 0.5rem;
-    border: 1px solid red;
-    border-radius: 4px;
-  }
-
-  .form-group {
-    margin-bottom: 1rem;
-  }
-
-  label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-  }
-
-  input, select, textarea {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-  }
-
-  textarea {
-    min-height: 100px;
-  }
-
-  .exercises-section {
-    margin-top: 2rem;
-  }
-
-  .exercise-picker {
-    margin-bottom: 1rem;
-  }
-
-  .selected-exercises {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .exercise-item {
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 1rem;
-  }
-
-  .exercise-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-
-  .exercise-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-  }
-
-  .exercise-details label {
-    font-size: 0.9rem;
-  }
-
-  .exercise-details input {
-    width: 80px;
-  }
-
-  .no-exercises {
-    text-align: center;
-    color: #666;
-    padding: 2rem;
-  }
-
-  .templates-list {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .templates-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-  }
-
-  .loading, .no-templates {
-    text-align: center;
-    padding: 2rem;
-    color: #666;
-  }
-
-  .templates-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-  }
-
-  .template-card {
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 1rem;
-  }
-
-  .template-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    margin-bottom: 1rem;
-  }
-
-  .template-header h3 {
-    margin: 0;
-    font-size: 1.2rem;
-  }
-
-  .difficulty {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    text-transform: capitalize;
-  }
-
-  .difficulty.beginner {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-  }
-
-  .difficulty.intermediate {
-    background-color: #fff3e0;
-    color: #ef6c00;
-  }
-
-  .difficulty.advanced {
-    background-color: #ffebee;
-    color: #c62828;
-  }
-
-  .description {
-    color: #666;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-  }
-
-  .exercises-count {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-  }
-
-  .template-actions {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  button {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-    background-color: #4CAF50;
-    color: white;
-  }
-
-  button.secondary {
-    background-color: #f5f5f5;
-    color: #333;
-  }
-
-  button.danger {
-    background-color: #f44336;
-    color: white;
-  }
-
-  button:hover {
-    opacity: 0.9;
-  }
-
-  button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 </style> 
