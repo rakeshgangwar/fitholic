@@ -39,6 +39,8 @@
 	let selectedMuscleGroup: string = '';
 	let selectedDifficulty: string = '';
 	let viewMode: 'card' | 'list' = 'card';
+	let showVideoModal = false;
+	let selectedVideoUrl: string | null = null;
 
 	const muscleGroups = [
 		{ value: 'chest', label: exercises_muscle_groups_chest() },
@@ -85,6 +87,16 @@
 
 	async function viewExercise(exerciseId: string) {
 		await goto(`/dashboard/exercises/${exerciseId}`);
+	}
+
+	function openVideoModal(url: string) {
+		selectedVideoUrl = url;
+		showVideoModal = true;
+	}
+
+	function closeVideoModal() {
+		showVideoModal = false;
+		selectedVideoUrl = null;
 	}
 </script>
 
@@ -180,20 +192,62 @@
 			<p class="mt-4 text-gray-500 text-sm">{exercises_no_results()}</p>
 		</div>
 	{:else}
+		{#if showVideoModal && selectedVideoUrl}
+			<div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+				<div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+					<div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" on:click={closeVideoModal}></div>
+
+					<div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full sm:p-6">
+						<div class="absolute top-0 right-0 pt-4 pr-4">
+							<button
+								type="button"
+								class="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+								on:click={closeVideoModal}
+							>
+								<span class="sr-only">Close</span>
+								<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+								</svg>
+							</button>
+						</div>
+						
+						<div class="relative" style="padding-top: 56.25%;">
+							<iframe
+								src={`https://www.youtube.com/embed/${getYouTubeId(selectedVideoUrl)}`}
+								title="Exercise Video"
+								frameborder="0"
+								allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+								allowfullscreen
+								class="absolute top-0 left-0 w-full h-full"
+							></iframe>
+						</div>
+					</div>
+				</div>
+			</div>
+		{/if}
 		{#if viewMode === 'card'}
 			<div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
 				{#each filteredExercises as exercise}
 					<div class="exercise-card group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
 						{#if exercise.video_url && getYouTubeId(exercise.video_url)}
-							<div class="relative rounded-t-xl overflow-hidden" style="padding-top: 56.25%;">
-								<iframe
-									src={`https://www.youtube.com/embed/${getYouTubeId(exercise.video_url)}`}
-									title={exercise.name}
-									frameborder="0"
-									allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-									allowfullscreen
-									class="absolute top-0 left-0 w-full h-full"
-								></iframe>
+							<div 
+								class="relative rounded-t-xl overflow-hidden cursor-pointer" 
+								style="padding-top: 56.25%;"
+								on:click={() => openVideoModal(exercise.video_url)}
+								on:keypress={(e) => e.key === 'Enter' && openVideoModal(exercise.video_url)}
+								tabindex="0"
+								role="button"
+							>
+								<img
+									src={`https://img.youtube.com/vi/${getYouTubeId(exercise.video_url)}/hqdefault.jpg`}
+									alt={exercise.name}
+									class="absolute top-0 left-0 w-full h-full object-cover"
+								/>
+								<div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+									<svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
+										<path d="M8 5v14l11-7z"/>
+									</svg>
+								</div>
 							</div>
 						{/if}
 
@@ -270,12 +324,23 @@
 									<td class="px-6 py-4">
 										<div class="flex items-center">
 											{#if exercise.video_url && getYouTubeId(exercise.video_url)}
-												<div class="flex-shrink-0 h-10 w-16 relative rounded overflow-hidden">
+												<div 
+													class="flex-shrink-0 h-10 w-16 relative rounded overflow-hidden cursor-pointer group"
+													on:click={() => openVideoModal(exercise.video_url)}
+													on:keypress={(e) => e.key === 'Enter' && openVideoModal(exercise.video_url)}
+													tabindex="0"
+													role="button"
+												>
 													<img
 														src={`https://img.youtube.com/vi/${getYouTubeId(exercise.video_url)}/default.jpg`}
 														alt={exercise.name}
 														class="h-full w-full object-cover"
 													/>
+													<div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+														<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+															<path d="M8 5v14l11-7z"/>
+														</svg>
+													</div>
 												</div>
 											{/if}
 											<div class="ml-4">

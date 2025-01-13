@@ -105,52 +105,7 @@
   <main>
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
       <div class="px-4 py-8 sm:px-0">
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <!-- Latest Workout Card -->
-          <div class="bg-white overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <svg class="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">
-                      Latest Workout
-                    </dt>
-                    <dd class="flex items-baseline">
-                      {#if loading.workouts}
-                        <div class="text-sm text-gray-500">Loading...</div>
-                      {:else if latestWorkout}
-                        <div>
-                          <div class="text-2xl font-semibold text-gray-900">
-                            {latestWorkout.template?.name || 'Unknown Workout'}
-                          </div>
-                          <div class="text-sm text-gray-500">
-                            Completed on {formatDate(latestWorkout.created_at)}
-                          </div>
-                        </div>
-                      {:else}
-                        <div class="text-sm text-gray-500">No workouts logged yet</div>
-                      {/if}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 px-5 py-3">
-              <div class="text-sm">
-                <button 
-                  class="font-medium text-green-600 hover:text-green-500 transition-colors duration-200"
-                  on:click={() => window.location.href = '/dashboard/workouts'}
-                >
-                  View workout history
-                </button>
-              </div>
-            </div>
-          </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
 
           <!-- Next Workout Card -->
           <div class="bg-white overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
@@ -237,6 +192,52 @@
                   on:click={() => window.location.href = '/dashboard/exercises'}
                 >
                   Browse exercises
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Latest Workout Card -->
+          <div class="bg-white overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+            <div class="p-5">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <svg class="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">
+                      Latest Workout
+                    </dt>
+                    <dd class="flex items-baseline">
+                      {#if loading.workouts}
+                        <div class="text-sm text-gray-500">Loading...</div>
+                      {:else if latestWorkout}
+                        <div>
+                          <div class="text-2xl font-semibold text-gray-900">
+                            {latestWorkout.template?.name || 'Unknown Workout'}
+                          </div>
+                          <div class="text-sm text-gray-500">
+                            Completed on {formatDate(latestWorkout.created_at)}
+                          </div>
+                        </div>
+                      {:else}
+                        <div class="text-sm text-gray-500">No workouts logged yet</div>
+                      {/if}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+            <div class="bg-gray-50 px-5 py-3">
+              <div class="text-sm">
+                <button 
+                  class="font-medium text-green-600 hover:text-green-500 transition-colors duration-200"
+                  on:click={() => window.location.href = '/dashboard/workouts'}
+                >
+                  View workout history
                 </button>
               </div>
             </div>
