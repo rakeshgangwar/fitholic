@@ -45,7 +45,7 @@
 	}
 </script>
 
-<div class="container mx-auto px-4 py-8 max-w-5xl">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 	<div class="mb-6">
 		<button 
 			type="button"

@@ -68,9 +68,11 @@
   }
 </script>
 
-<div class="container mx-auto p-4 space-y-6">
-  <div class="flex justify-between items-center">
-    <h1 class="text-3xl font-bold">Workout Management</h1>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <header class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold tracking-tight">
+      Workout Management
+    </h1>
     {#if activeTab === 'sessions' && !showGenerator}
       <button 
         class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
@@ -82,7 +84,7 @@
         Generate Workout
       </button>
     {/if}
-  </div>
+  </header>
 
   {#if error}
     <Alert variant="destructive">
