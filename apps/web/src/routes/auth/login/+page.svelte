@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { enhance } from '$app/forms';
   import { goto } from '$app/navigation';
   import { signIn } from '$lib/utils/auth';
   import { authStore } from '$lib/stores/auth';
@@ -9,21 +8,24 @@
   let error = '';
   let loading = false;
   
-  async function handleSubmit() {
+  async function handleSubmit(event: SubmitEvent) {
+    event.preventDefault();
+    if (loading) return;
+    
     loading = true;
     error = '';
     
     try {
       const { user } = await signIn(email, password);
       authStore.set(user);
-      await goto('/dashboard');
+      loading = false; // Set loading to false before navigation
+      window.location.href = '/dashboard'; // Use window.location.href for more reliable navigation
     } catch (err) {
       if (err instanceof Error) {
         error = err.message;
       } else {
         error = 'Login failed. Please try again.';
       }
-    } finally {
       loading = false;
     }
   }
