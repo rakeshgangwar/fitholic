@@ -2,6 +2,14 @@
   import { onMount, createEventDispatcher } from 'svelte';
   import type { Exercise, WorkoutTemplate, TemplateExercise } from '$lib/types';
   import { api } from '$lib/api';
+  import { Button } from "$lib/components/ui/button";
+  import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "$lib/components/ui/card";
+  import { Input } from "$lib/components/ui/input";
+  import { Label } from "$lib/components/ui/label";
+  import { Select, SelectTrigger, SelectContent, SelectItem } from "$lib/components/ui/select";
+  import { Badge } from "$lib/components/ui/badge";
+  import { Alert, AlertDescription } from "$lib/components/ui/alert";
+  import { Textarea } from "$lib/components/ui/textarea";
 
   const dispatch = createEventDispatcher<{
     templateCreated: void;
@@ -20,6 +28,7 @@
   let description = '';
   let difficulty = 'beginner';
   let error = '';
+  let selectedExerciseIndex: string | null = null;
 
   onMount(async () => {
     try {
@@ -112,25 +121,24 @@
     });
   }
 
-  function handleExerciseSelect(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const selectedIndex = parseInt(select.value);
-    if (!isNaN(selectedIndex)) {
-      addExercise(exercises[selectedIndex]);
+  $: if (selectedExerciseIndex !== null) {
+    const index = parseInt(selectedExerciseIndex);
+    if (!isNaN(index)) {
+      addExercise(exercises[index]);
+      selectedExerciseIndex = null;
     }
-    select.value = '';
   }
 
   function getDifficultyColor(difficulty: string): string {
     switch (difficulty) {
       case 'beginner':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'intermediate':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       case 'advanced':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
     }
   }
 </script>
@@ -138,12 +146,9 @@
 {#if showForm}
   <div class="max-w-3xl mx-auto">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-gray-900">
-        {editingSession ? 'Edit' : 'Create'} Workout Session
-      </h2>
-      <button
-        type="button"
-        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+      <h2 class="text-xl font-semibold">{editingSession ? 'Edit' : 'Create'} Workout Session</h2>
+      <button 
+        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
         on:click={resetForm}
       >
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,180 +159,174 @@
     </div>
 
     {#if error}
-      <div class="mb-6 rounded-md bg-red-50 p-4">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-          </div>
-          <div class="ml-3">
-            <p class="text-sm font-medium text-red-800">{error}</p>
-          </div>
-        </div>
-      </div>
+      <Alert variant="destructive" class="mb-6">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
     {/if}
 
-    <form on:submit|preventDefault={handleSubmit} class="space-y-6 bg-white rounded-xl shadow-sm px-6 py-8">
-      <div>
-        <label for="name" class="block text-sm font-medium text-gray-700">Session Name *</label>
-        <input
-          type="text"
-          id="name"
-          bind:value={name}
-          required
-          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          placeholder="e.g., Full Body Workout"
-        />
-      </div>
-
-      <div>
-        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-        <textarea
-          id="description"
-          bind:value={description}
-          rows="3"
-          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          placeholder="Describe your workout session..."
-        />
-      </div>
-
-      <div>
-        <label for="difficulty" class="block text-sm font-medium text-gray-700">Difficulty *</label>
-        <select
-          id="difficulty"
-          bind:value={difficulty}
-          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        >
-          <option value="beginner">Beginner</option>
-          <option value="intermediate">Intermediate</option>
-          <option value="advanced">Advanced</option>
-        </select>
-      </div>
-
-      <div>
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-medium text-gray-900">Exercises</h3>
-          <div class="relative">
-            <select
-              on:change={handleExerciseSelect}
-              class="block w-64 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            >
-              <option value="">Add Exercise...</option>
-              {#each exercises as exercise, i}
-                <option value={i}>{exercise.name}</option>
-              {/each}
-            </select>
+    <Card>
+      <CardContent class="pt-6">
+        <form on:submit|preventDefault={handleSubmit} class="space-y-6">
+          <div class="space-y-2">
+            <Label for="name">Session Name *</Label>
+            <Input
+              type="text"
+              id="name"
+              bind:value={name}
+              required
+              placeholder="e.g., Full Body Workout"
+            />
           </div>
-        </div>
 
-        {#if selectedExercises.length > 0}
+          <div class="space-y-2">
+            <Label for="description">Description</Label>
+            <Textarea
+              id="description"
+              bind:value={description}
+              rows="3"
+              placeholder="Describe your workout session..."
+            />
+          </div>
+
+          <div class="space-y-2">
+            <Label for="difficulty">Difficulty *</Label>
+            <Select bind:value={difficulty}>
+              <SelectTrigger>
+                {difficulty}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="beginner">Beginner</SelectItem>
+                <SelectItem value="intermediate">Intermediate</SelectItem>
+                <SelectItem value="advanced">Advanced</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div class="space-y-4">
-            {#each selectedExercises as exercise, i}
-              <div class="bg-gray-50 rounded-lg p-4">
-                <div class="flex justify-between items-start mb-4">
-                  <h4 class="text-sm font-medium text-gray-900">
-                    {exercises.find(e => e.exercise_id === exercise.exercise_id)?.name}
-                  </h4>
-                  <button
-                    type="button"
-                    class="inline-flex items-center p-1.5 border border-transparent rounded-full text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    on:click={() => removeExercise(i)}
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                  </button>
-                </div>
-                <div class="grid grid-cols-3 gap-4">
-                  <div>
-                    <label class="block text-xs font-medium text-gray-500">Sets</label>
-                    <input
-                      type="number"
-                      min="1"
-                      bind:value={exercise.sets}
-                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-xs font-medium text-gray-500">Reps</label>
-                    <input
-                      type="number"
-                      min="1"
-                      bind:value={exercise.reps}
-                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-xs font-medium text-gray-500">Rest (sec)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="5"
-                      bind:value={exercise.rest_time}
-                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-            {/each}
-          </div>
-        {:else}
-          <div class="text-center py-12 bg-gray-50 rounded-lg">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-            </svg>
-            <p class="mt-2 text-sm text-gray-500">No exercises added yet</p>
-          </div>
-        {/if}
-      </div>
+            <div class="flex justify-between items-center">
+              <Label>Exercises</Label>
+              <Select value={selectedExerciseIndex} onValueChange={(value) => selectedExerciseIndex = value}>
+                <SelectTrigger class="w-[200px]">
+                  Add Exercise...
+                </SelectTrigger>
+                <SelectContent>
+                  {#each exercises as exercise, i}
+                    <SelectItem value={i.toString()}>{exercise.name}</SelectItem>
+                  {/each}
+                </SelectContent>
+              </Select>
+            </div>
 
-      <div class="flex justify-end">
-        <button
-          type="submit"
-          disabled={loading}
-          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-        >
-          {loading ? 'Saving...' : editingSession ? 'Update Session' : 'Create Session'}
-        </button>
-      </div>
-    </form>
+            {#if selectedExercises.length > 0}
+              <div class="space-y-4">
+                {#each selectedExercises as exercise, i}
+                  <Card>
+                    <CardContent class="pt-6">
+                      <div class="flex justify-between items-start mb-4">
+                        <h4 class="text-sm font-medium">
+                          {exercises.find(e => e.exercise_id === exercise.exercise_id)?.name}
+                        </h4>
+                        <button
+                          type="button"
+                          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10 text-destructive"
+                          on:click={() => removeExercise(i)}
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                          </svg>
+                        </button>
+                      </div>
+                      <div class="grid grid-cols-3 gap-4">
+                        <div class="space-y-2">
+                          <Label>Sets</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            bind:value={exercise.sets}
+                          />
+                        </div>
+                        <div class="space-y-2">
+                          <Label>Reps</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            bind:value={exercise.reps}
+                          />
+                        </div>
+                        <div class="space-y-2">
+                          <Label>Rest (sec)</Label>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="5"
+                            bind:value={exercise.rest_time}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                {/each}
+              </div>
+            {:else}
+              <Card class="bg-muted">
+                <CardContent class="flex flex-col items-center justify-center py-12">
+                  <svg class="h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                  </svg>
+                  <p class="mt-2 text-sm text-muted-foreground">No exercises added yet</p>
+                </CardContent>
+              </Card>
+            {/if}
+          </div>
+
+          <div class="flex justify-end">
+            <button 
+              type="submit" 
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+              disabled={loading}
+            >
+              {loading ? 'Saving...' : editingSession ? 'Update Session' : 'Create Session'}
+            </button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   </div>
 {:else}
   <div>
     {#if loading}
       <div class="flex justify-center items-center py-12">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-green-500"></div>
-        <p class="mt-4 text-gray-500 text-sm">Loading sessions...</p>
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-muted border-t-primary"></div>
+        <p class="mt-4 text-muted-foreground text-sm">Loading sessions...</p>
       </div>
     {:else if templates.length === 0}
-      <div class="text-center py-12 bg-white rounded-xl shadow-sm">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-        </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">No workout sessions</h3>
-        <p class="mt-1 text-sm text-gray-500">Get started by creating a new workout session.</p>
-        <div class="mt-6">
-          <button
-            type="button"
-            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            on:click={() => showForm = true}
-          >
-            <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-            </svg>
-            Create Session
-          </button>
-        </div>
-      </div>
+      <Card class="text-center py-12">
+        <CardContent>
+          <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <h3 class="mt-2 text-sm font-medium">No workout sessions</h3>
+          <p class="mt-1 text-sm text-muted-foreground">Get started by creating a new workout session.</p>
+          <div class="mt-6">
+            <button 
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+              on:click={() => showForm = true}
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              Create Session
+            </button>
+          </div>
+        </CardContent>
+      </Card>
     {:else}
       <div class="flex justify-end mb-6">
-        <button
-          type="button"
-          class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        <button 
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
           on:click={() => showForm = true}
         >
-          <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
           </svg>
           Create Session
@@ -336,33 +335,33 @@
 
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {#each templates as session}
-          <div class="bg-white overflow-hidden rounded-xl shadow-sm divide-y divide-gray-200 group hover:shadow-md transition-all duration-300">
-            <div class="px-6 py-5">
+          <Card class="group hover:shadow-md transition-all duration-300">
+            <CardHeader>
               <div class="flex justify-between items-start">
                 <div>
-                  <h3 
-                    class="text-lg font-semibold text-gray-900 group-hover:text-green-600 transition-colors duration-200 cursor-pointer"
-                    on:click={() => window.location.href = `/dashboard/workouts/${session.template_id}`}
-                    on:keypress={(e) => e.key === 'Enter' && (window.location.href = `/dashboard/workouts/${session.template_id}`)}
-                    tabindex="0"
-                    role="link"
-                  >
-                    {session.name}
-                  </h3>
-                  <p class="mt-1 text-sm text-gray-500 line-clamp-2">{session.description || 'No description'}</p>
+                  <CardTitle>
+                    <button 
+                      class="text-lg font-semibold group-hover:text-primary transition-colors duration-200"
+                      on:click={() => window.location.href = `/dashboard/workouts/${session.template_id}`}
+                    >
+                      {session.name}
+                    </button>
+                  </CardTitle>
+                  <CardDescription class="mt-1 line-clamp-2">
+                    {session.description || 'No description'}
+                  </CardDescription>
                 </div>
-                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {getDifficultyColor(session.difficulty)}">
+                <Badge variant="outline" class={getDifficultyColor(session.difficulty)}>
                   {session.difficulty}
-                </span>
+                </Badge>
               </div>
-            </div>
-            <div class="px-6 py-4">
+            </CardHeader>
+            <CardContent>
               <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-500">{session.exercises.length} exercises</span>
+                <span class="text-muted-foreground">{session.exercises.length} exercises</span>
                 <div class="flex space-x-2">
-                  <button
-                    type="button"
-                    class="inline-flex items-center rounded-lg bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                  <button 
+                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
                     on:click={() => startEditing(session)}
                   >
                     <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -370,9 +369,8 @@
                     </svg>
                     Edit
                   </button>
-                  <button
-                    type="button"
-                    class="inline-flex items-center rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors duration-200"
+                  <button 
+                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 text-destructive"
                     on:click={() => deleteSession(session.template_id)}
                   >
                     <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -382,8 +380,8 @@
                   </button>
                 </div>
               </div>
-              <button
-                class="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+              <button 
+                class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 mt-4 w-full"
                 on:click={() => dispatch('templateSelected', session)}
               >
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -392,8 +390,8 @@
                 </svg>
                 Start Session
               </button>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         {/each}
       </div>
     {/if}

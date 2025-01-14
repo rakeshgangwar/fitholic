@@ -1,12 +1,14 @@
-from typing import List, Optional
+from typing import List, Optional, Literal
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 from datetime import date
+from pydantic import BaseModel, Field
 
 from app.core.deps import get_db, get_current_user
 from app.models.user import User
 from app.schemas.workout import (
+    WorkoutGenerationParams,
     WorkoutTemplate,
     WorkoutTemplateCreate,
     WorkoutTemplateUpdate,
@@ -343,7 +345,8 @@ def delete_workout_log(
 async def generate_workout(
     *,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    params: WorkoutGenerationParams
 ):
     """Generate a personalized workout using AI"""
     try:
@@ -358,9 +361,19 @@ async def generate_workout(
             # Infer fitness level from goals and other data
             "fitness_level": "beginner"  # Default to beginner if no other info available
         }
+
+        user_requirements = {
+            "fitness_goals": params.focusAreas,
+            "available_equipment": params.equipment,
+            "preferred_workout_duration": params.duration,
+            "location": params.location,
+            "intensity": params.intensity,
+            # Infer fitness level from intensity
+            "fitness_level": "beginner" if params.intensity == "light" else "intermediate" if params.intensity == "moderate" else "advanced"
+        }
         
         # Generate workout template
-        template_in = await generator.generate_workout(user_profile)
+        template_in = await generator.generate_workout(user_profile, user_requirements)
         
         # Save the template
         return workout_templates.create_with_user(

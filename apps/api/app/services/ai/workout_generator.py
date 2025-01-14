@@ -64,6 +64,9 @@ class WorkoutGenerator:
             Fitness Level: {fitness_level}
             Available Equipment: {equipment}
             Time Available: {time_available} minutes
+            Focus Muscles: {focus_muscles}
+            Workout Location: {location}
+            Intensity: {intensity}
             
             Generate a workout plan that matches the user's profile.
             """)
@@ -107,7 +110,7 @@ class WorkoutGenerator:
             logger.error(f"Failed to create exercise: {str(e)}")
             raise ValueError(f"Could not create exercise '{exercise_data.name}': {str(e)}")
     
-    async def generate_workout(self, user_profile: Dict[str, Any]) -> WorkoutTemplateCreate:
+    async def generate_workout(self, user_profile: Dict[str, Any], user_requirements: Dict[str, Any]) -> WorkoutTemplateCreate:
         """Generate a personalized workout based on user profile"""
         logger.info(f"Generating workout for user with goals: {user_profile.get('fitness_goals')}")
         try:
@@ -120,9 +123,12 @@ class WorkoutGenerator:
             # Generate workout using the chain with structured output
             workout_plan = await self.chain.ainvoke({
                 "goals": user_profile.get("fitness_goals", []),
-                "fitness_level": user_profile.get("fitness_level", "beginner"),
-                "equipment": user_profile.get("available_equipment", []),
-                "time_available": user_profile.get("preferred_workout_duration", 60)
+                "fitness_level": user_requirements.get("fitness_level", []),
+                "equipment": user_requirements.get("available_equipment", []),
+                "time_available": user_requirements.get("preferred_workout_duration", 60),
+                "focus_muscles": user_requirements.get("fitness_goals", []),
+                "location": user_requirements.get("location", []),
+                "intensity": user_requirements.get("intensity", [])
             })
             
             # Convert response to WorkoutTemplateCreate
@@ -133,7 +139,7 @@ class WorkoutGenerator:
                     exercise_id = await self._get_or_create_exercise(
                         exercise_data=ex,
                         difficulty=workout_plan.difficulty,
-                        available_equipment=user_profile.get("available_equipment", [])
+                        available_equipment=user_requirements.get("available_equipment", [])
                     )
                     
                     exercises_list.append(

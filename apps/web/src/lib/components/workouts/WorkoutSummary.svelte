@@ -1,14 +1,22 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { WorkoutLog } from '$lib/types';
+  import type { WorkoutLog, WorkoutExerciseLog, Exercise } from '$lib/types';
   import { api } from '$lib/api';
+  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
+  import { Alert, AlertDescription } from "$lib/components/ui/alert";
+  import { Skeleton } from "$lib/components/ui/skeleton";
+  import { Separator } from "$lib/components/ui/separator";
 
   let workouts: WorkoutLog[] = [];
+  let exercises: Record<string, Exercise> = {};
   let loading = false;
   let error = '';
 
   onMount(async () => {
-    await loadWorkoutHistory();
+    await Promise.all([
+      loadWorkoutHistory(),
+      loadExercises()
+    ]);
   });
 
   async function loadWorkoutHistory() {
@@ -23,6 +31,19 @@
     }
   }
 
+  async function loadExercises() {
+    try {
+      const response = await api.get('/exercises');
+      const exerciseList: Exercise[] = response.data;
+      exercises = exerciseList.reduce((acc, exercise) => {
+        acc[exercise.exercise_id] = exercise;
+        return acc;
+      }, {} as Record<string, Exercise>);
+    } catch (err) {
+      error = 'Failed to load exercises';
+    }
+  }
+
   function formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString();
   }
@@ -34,200 +55,102 @@
       ? `${hours}h ${remainingMinutes}m`
       : `${remainingMinutes}m`;
   }
+
+  function getExerciseName(exerciseId: string): string {
+    return exercises[exerciseId]?.name || `Exercise ${exerciseId}`;
+  }
 </script>
 
-<div class="workout-summary">
-  <h2>Workout History</h2>
+<div class="space-y-6">
+  <h2 class="text-2xl font-semibold">Workout History</h2>
 
   {#if error}
-    <div class="error">{error}</div>
+    <Alert variant="destructive">
+      <AlertDescription>{error}</AlertDescription>
+    </Alert>
   {/if}
 
   {#if loading}
-    <div class="loading">Loading workout history...</div>
-  {:else if workouts.length === 0}
-    <div class="no-workouts">
-      <p>No workouts logged yet.</p>
-      <p>Start by selecting a workout session and logging your first workout!</p>
-    </div>
-  {:else}
-    <div class="workouts-grid">
-      {#each workouts as workout}
-        <div class="workout-card">
-          <div class="workout-header">
-            <h3>{workout.session_name || 'Workout Session'}</h3>
-            <span class="date">{formatDate(workout.start_time)}</span>
-          </div>
-          
-          <div class="workout-stats">
-            <div class="stat">
-              <span class="label">Duration</span>
-              <span class="value">{formatDuration(workout.duration)}</span>
-            </div>
-            <div class="stat">
-              <span class="label">Exercises</span>
-              <span class="value">{workout.exercises.length}</span>
-            </div>
-          </div>
-
-          <div class="exercises-list">
-            {#each workout.exercises as exercise}
-              <div class="exercise-item">
-                <span class="exercise-name">{exercise.name}</span>
-                <span class="exercise-sets">{exercise.sets.length} sets</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {#each Array(3) as _}
+        <Card>
+          <CardHeader>
+            <Skeleton class="h-4 w-3/4" />
+            <Skeleton class="h-3 w-1/2" />
+          </CardHeader>
+          <CardContent>
+            <div class="space-y-4">
+              <div class="flex justify-between">
+                <Skeleton class="h-3 w-1/4" />
+                <Skeleton class="h-3 w-1/4" />
               </div>
-            {/each}
-          </div>
-
-          {#if workout.notes}
-            <div class="notes">
-              <h4>Notes</h4>
-              <p>{workout.notes}</p>
+              <Separator />
+              <div class="space-y-2">
+                <Skeleton class="h-3 w-full" />
+                <Skeleton class="h-3 w-3/4" />
+              </div>
             </div>
-          {/if}
-        </div>
+          </CardContent>
+        </Card>
+      {/each}
+    </div>
+  {:else if workouts.length === 0}
+    <Card>
+      <CardContent class="flex flex-col items-center justify-center py-12">
+        <svg class="h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+        </svg>
+        <p class="mt-4 text-lg font-medium">No workouts logged yet</p>
+        <p class="mt-2 text-sm text-muted-foreground">Start by selecting a workout session and logging your first workout!</p>
+      </CardContent>
+    </Card>
+  {:else}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {#each workouts as workout}
+        <Card>
+          <CardHeader>
+            <div class="flex justify-between items-start">
+              <div>
+                <CardTitle>Workout Session</CardTitle>
+                <CardDescription>{formatDate(workout.date)}</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1">
+                  <p class="text-sm text-muted-foreground">Duration</p>
+                  <p class="text-lg font-medium">{workout.duration ? formatDuration(workout.duration) : 'N/A'}</p>
+                </div>
+                <div class="space-y-1">
+                  <p class="text-sm text-muted-foreground">Exercises</p>
+                  <p class="text-lg font-medium">{workout.exercises.length}</p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div class="space-y-2">
+                {#each workout.exercises as exercise}
+                  <div class="flex justify-between items-center text-sm">
+                    <span>{getExerciseName(exercise.exercise_id)}</span>
+                    <span class="text-muted-foreground">{exercise.sets.length} sets</span>
+                  </div>
+                {/each}
+              </div>
+
+              {#if workout.notes}
+                <Separator />
+                <div class="space-y-1.5">
+                  <p class="text-sm font-medium">Notes</p>
+                  <p class="text-sm text-muted-foreground">{workout.notes}</p>
+                </div>
+              {/if}
+            </div>
+          </CardContent>
+        </Card>
       {/each}
     </div>
   {/if}
-</div>
-
-<style>
-  .workout-summary {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 1.5rem;
-  }
-
-  .loading {
-    text-align: center;
-    padding: 2rem;
-    color: #6b7280;
-  }
-
-  .no-workouts {
-    text-align: center;
-    padding: 2rem;
-    color: #6b7280;
-    background: #f9fafb;
-    border-radius: 8px;
-  }
-
-  .workouts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-  }
-
-  .workout-card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 1rem;
-  }
-
-  .workout-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-
-  .workout-header h3 {
-    margin: 0;
-    font-size: 1.25rem;
-    color: #1a1a1a;
-  }
-
-  .date {
-    color: #6b7280;
-    font-size: 0.875rem;
-  }
-
-  .workout-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background: #f9fafb;
-    border-radius: 6px;
-  }
-
-  .stat {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .label {
-    font-size: 0.75rem;
-    color: #6b7280;
-    text-transform: uppercase;
-  }
-
-  .value {
-    font-size: 1.125rem;
-    font-weight: 500;
-    color: #1a1a1a;
-  }
-
-  .exercises-list {
-    margin-bottom: 1rem;
-  }
-
-  .exercise-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #e5e7eb;
-  }
-
-  .exercise-item:last-child {
-    border-bottom: none;
-  }
-
-  .exercise-name {
-    color: #374151;
-    font-size: 0.875rem;
-  }
-
-  .exercise-sets {
-    color: #6b7280;
-    font-size: 0.75rem;
-  }
-
-  .notes {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #e5e7eb;
-  }
-
-  .notes h4 {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #374151;
-    margin: 0 0 0.5rem 0;
-  }
-
-  .notes p {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin: 0;
-  }
-
-  .error {
-    background: #fee2e2;
-    border: 1px solid #ef4444;
-    color: #b91c1c;
-    padding: 0.75rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-  }
-</style> 
+</div> 

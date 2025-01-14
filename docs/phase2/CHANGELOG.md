@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.13] - 2024-01-15
+
+### Changed
+- Updated `WorkoutGenerator` component:
+  - Replaced select components with radio buttons for `location` and `intensity` fields.
+  - Improved user interface for selecting workout preferences.
+- Updated workout-related components to use shadcn components for improved styling and theme awareness:
+  - `WorkoutPlanner` component updated with shadcn form elements and layout.
+  - `WorkoutLogger` component enhanced with shadcn alerts and progress bars.
+  - `WorkoutSummary` component restructured using shadcn cards and alerts.
+
+### Added
+- Updated API endpoint `/workouts/generate` to accept new payload structure:
+  - Added `WorkoutGenerationParams` model for request validation.
+  - Enhanced workout generation logic to use user-provided parameters.
+  - Improved error handling and validation for workout generation requests.
+
 ## [2.0.12] - 2024-01-14
 
 ### Changed

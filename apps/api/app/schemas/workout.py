@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Literal, Optional
 from uuid import UUID
 from pydantic import BaseModel, Field
 from datetime import datetime, date
@@ -68,3 +68,10 @@ class WorkoutLog(WorkoutLogBase):
 
     class Config:
         from_attributes = True 
+
+class WorkoutGenerationParams(BaseModel):
+    duration: int = Field(ge=15, le=120)
+    location: Literal['anywhere', 'home', 'gym', 'outdoor']
+    equipment: List[str]
+    intensity: Literal['light', 'moderate', 'intense']
+    focusAreas: List[str]
