@@ -8,6 +8,7 @@
 	import { page } from '$app/stores';
 	import { writable } from 'svelte/store';
 	import '../app.css';
+	import { Toaster } from '$lib/components/ui/sonner';
 
 	const publicPaths = ['/auth/login', '/auth/register'];
 	const isInitialized = writable(false);
@@ -46,6 +47,8 @@
 		}
 	}
 </script>
+
+<Toaster richColors />
 
 <ParaglideJS {i18n}>
 	{#if !initializing}

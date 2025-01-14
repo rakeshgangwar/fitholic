@@ -2,7 +2,12 @@
   import { authStore } from '$lib/stores/auth';
   import { signOut } from '$lib/utils/auth';
   import { goto } from '$app/navigation';
-  import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
+  import { theme } from '$lib/stores/theme';
+  import { onMount } from 'svelte';
+  import { cn } from '$lib/utils';
+  import { Moon, Sun } from 'lucide-svelte';
+  import { api } from '$lib/api';
+  import { toast } from 'svelte-sonner';
   import { 
     nav_brand,
     nav_dashboard,
@@ -13,15 +18,55 @@
     nav_profile,
     nav_sign_out,
     nav_sign_out_error,
-
-	nav_settings
-
+    nav_settings
   } from '$lib/paraglide/messages';
 
   let isMenuOpen = false;
+  let currentTheme: 'light' | 'dark' = 'light';
   
   function toggleMenu() {
     isMenuOpen = !isMenuOpen;
+  }
+
+  onMount(async () => {
+    // Initialize theme from user profile or localStorage
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    currentTheme = savedTheme || 'light';
+    document.documentElement.classList.add(currentTheme);
+    theme.set(currentTheme);
+  });
+  
+  // Subscribe to theme changes
+  theme.subscribe(value => {
+    if (value === 'light' || value === 'dark') {
+      currentTheme = value;
+      localStorage.setItem('theme', value);
+    }
+  });
+  
+  // Toggle theme and sync with profile if logged in
+  async function toggleTheme() {
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    // Update UI immediately
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(newTheme);
+    theme.set(newTheme);
+    
+    // Sync with profile if logged in
+    if ($authStore) {
+      try {
+        await api.put('/profiles/me', { theme: newTheme });
+      } catch (err) {
+        // Revert on error
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(currentTheme);
+        theme.set(currentTheme);
+        
+        const message = err instanceof Error ? err.message : 'Failed to update theme preference';
+        toast.error(message);
+      }
+    }
   }
 
   async function handleSignOut() {
@@ -101,7 +146,18 @@
         </div>
 
         <div class="hidden md:flex md:items-center md:space-x-4">
-          <LanguageSwitcher />
+          <button
+            type="button"
+            class={cn(
+              "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10",
+              "bg-transparent"
+            )}
+            on:click={toggleTheme}
+          >
+            <Sun class="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon class="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span class="sr-only">Toggle theme</span>
+          </button>
           <a 
             href="/dashboard/settings"
             class="text-muted-foreground hover:text-foreground px-3 py-2 rounded-md text-sm font-medium"
@@ -155,7 +211,18 @@
           {nav_settings()}
         </a>
         <div class="pl-3 pr-4 py-2">
-          <LanguageSwitcher />
+          <button
+            type="button"
+            class={cn(
+              "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10",
+              "bg-transparent"
+            )}
+            on:click={toggleTheme}
+          >
+            <Sun class="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon class="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span class="sr-only">Toggle theme</span>
+          </button>
         </div>
         <button
           on:click={handleSignOut}
