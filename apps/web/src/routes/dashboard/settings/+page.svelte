@@ -18,13 +18,13 @@
     import { Toaster } from '$lib/components/ui/sonner';
 
     let profile: UserProfile | null = null;
-    let activeTab = 'personal';
+    let activeTab = 'settings';
     let loading = true;
     let error: string | null = null;
 
     const tabs = [
-        { id: 'personal', title: profile_personal_info_tab() },
         { id: 'settings', title: profile_app_settings_tab() },
+        { id: 'personal', title: profile_personal_info_tab() },
         { id: 'notifications', title: profile_notifications_tab() },
         { id: 'privacy', title: profile_privacy_tab() }
     ];
@@ -154,17 +154,18 @@
                             </div>
                         </div>
                         <div class="mt-6">
-                            <Tabs.Content value="personal">
-                                <Card.Root>
-                                    <Card.Content class="pt-6">
-                                        <PersonalInfo {profile} on:saved={handleSaved} />
-                                    </Card.Content>
-                                </Card.Root>
-                            </Tabs.Content>
+                            
                             <Tabs.Content value="settings">
                                 <Card.Root>
                                     <Card.Content class="pt-6">
                                         <AppSettings {profile} on:saved={handleSaved} />
+                                    </Card.Content>
+                                </Card.Root>
+                            </Tabs.Content>
+                            <Tabs.Content value="personal">
+                                <Card.Root>
+                                    <Card.Content class="pt-6">
+                                        <PersonalInfo {profile} on:saved={handleSaved} />
                                     </Card.Content>
                                 </Card.Root>
                             </Tabs.Content>

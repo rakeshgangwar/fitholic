@@ -2,6 +2,7 @@
     import { createEventDispatcher } from 'svelte';
     import type { UserProfile, UserProfileUpdate } from '$lib/types';
     import { api } from '$lib/api';
+    import { toast } from 'svelte-sonner';
 
     import { Label } from '$lib/components/ui/label';
     import { Button } from '$lib/components/ui/button';
@@ -46,10 +47,18 @@
         try {
             saving = true;
             error = null;
-            await api.put('/profiles/me', formData);
+            const response = await api.put('/profiles/me', formData);
+            
+            // Update the profile with the new settings
+            if (response.data?.notification_settings) {
+                profile.notification_settings = response.data.notification_settings;
+            }
+            
+            toast.success('Notification settings saved successfully');
             dispatch('saved');
         } catch (e: any) {
             error = e.message || 'Failed to save notification settings';
+            toast.error(error);
         } finally {
             saving = false;
         }
@@ -66,50 +75,64 @@
     {/if}
 
     <div class="space-y-6">
-        <!-- Workout Reminders -->
-        <div class="flex items-center justify-between">
-            <div class="space-y-1">
-                <Label>Workout Reminders</Label>
-                <p class="text-sm text-muted-foreground">
-                    Get notified about your scheduled workouts
-                </p>
-            </div>
-            <Switch
-                checked={formData.notification_settings?.workout_reminders ?? false}
-                on:change={(e) => updateNotificationSetting('workout_reminders', e.currentTarget.checked)}
-            />
+        <!-- Section Header -->
+        <div class="border-b pb-2">
+            <h3 class="text-lg font-medium">Notification Preferences</h3>
+            <p class="text-sm text-muted-foreground">Manage how and when you want to be notified.</p>
         </div>
 
-        <!-- Progress Updates -->
-        <div class="flex items-center justify-between">
-            <div class="space-y-1">
-                <Label>Progress Updates</Label>
-                <p class="text-sm text-muted-foreground">
-                    Receive updates about your fitness progress
-                </p>
+        <!-- Workout Related Notifications -->
+        <div class="space-y-6">
+
+            <!-- Workout Reminders -->
+            <div class="flex items-center justify-between">
+                <div class="space-y-1">
+                    <Label>Workout Reminders</Label>
+                    <p class="text-sm text-muted-foreground">
+                        Get notified about your scheduled workouts
+                    </p>
+                </div>
+                <Switch
+                    checked={formData.notification_settings?.workout_reminders ?? false}
+                    onCheckedChange={(checked: boolean) => updateNotificationSetting('workout_reminders', checked)}
+                />
             </div>
-            <Switch
-                checked={formData.notification_settings?.progress_updates ?? false}
-                on:change={(e) => updateNotificationSetting('progress_updates', e.currentTarget.checked)}
-            />
         </div>
 
-        <!-- Achievement Alerts -->
-        <div class="flex items-center justify-between">
-            <div class="space-y-1">
-                <Label>Achievement Alerts</Label>
-                <p class="text-sm text-muted-foreground">
-                    Get notified when you reach fitness milestones
-                </p>
+        <!-- Progress Related Notifications -->
+        <div class="space-y-6">
+
+            <!-- Progress Updates -->
+            <div class="flex items-center justify-between">
+                <div class="space-y-1">
+                    <Label>Progress Updates</Label>
+                    <p class="text-sm text-muted-foreground">
+                        Receive updates about your fitness progress
+                    </p>
+                </div>
+                <Switch
+                    checked={formData.notification_settings?.progress_updates ?? false}
+                    onCheckedChange={(checked: boolean) => updateNotificationSetting('progress_updates', checked)}
+                />
             </div>
-            <Switch
-                checked={formData.notification_settings?.achievement_alerts ?? false}
-                on:change={(e) => updateNotificationSetting('achievement_alerts', e.currentTarget.checked)}
-            />
+
+            <!-- Achievement Alerts -->
+            <div class="flex items-center justify-between">
+                <div class="space-y-1">
+                    <Label>Achievement Alerts</Label>
+                    <p class="text-sm text-muted-foreground">
+                        Get notified when you reach fitness milestones
+                    </p>
+                </div>
+                <Switch
+                    checked={formData.notification_settings?.achievement_alerts ?? false}
+                    onCheckedChange={(checked: boolean) => updateNotificationSetting('achievement_alerts', checked)}
+                />
+            </div>
         </div>
     </div>
 
-    <div class="flex justify-end">
+    <div class="flex justify-end pt-4 border-t">
         <Button type="submit" disabled={saving}>
             {saving ? 'Saving...' : 'Save Changes'}
         </Button>

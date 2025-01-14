@@ -133,8 +133,15 @@
         </Alert>
     {/if}
 
+    <!-- Section Header -->
+    <div class="border-b pb-2">
+        <h3 class="text-lg font-medium">App Settings</h3>
+        <p class="text-sm text-muted-foreground">Customize your app experience.</p>
+    </div>
+
+    <!-- Theme Settings -->
     <div class="space-y-6">
-        <!-- Theme -->
+
         <div class="space-y-4">
             <div>
                 <Label>{settings_theme_label()}</Label>
@@ -157,8 +164,11 @@
                 {/each}
             </div>
         </div>
+    </div>
 
-        <!-- Language -->
+    <!-- Language Settings -->
+    <div class="space-y-6">
+        
         <div class="space-y-4">
             <div>
                 <Label>{settings_language_label()}</Label>
@@ -181,8 +191,11 @@
                 {/each}
             </div>
         </div>
+    </div>
 
-        <!-- Units Toggle -->
+    <!-- Units Settings -->
+    <div class="space-y-6">
+
         <div class="flex items-center justify-between">
             <div class="space-y-1">
                 <Label>{settings_units_label()}</Label>
@@ -192,7 +205,7 @@
             </div>
             <Switch
                 checked={$units === 'imperial'}
-                on:change={toggleUnits}
+                onCheckedChange={toggleUnits}
             />
         </div>
     </div>
