@@ -1,168 +1,242 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { authStore } from '$lib/stores/auth';
-  import { signOut } from '$lib/utils/auth';
-  import { goto } from '$app/navigation';
+  import { api } from '$lib/api';
+  import { nav_welcome } from '$lib/paraglide/messages';
+  import type { WorkoutLog, WorkoutTemplate, Exercise } from '$lib/types';
+  import * as Card from '$lib/components/ui/card';
+  import { Button } from '$lib/components/ui/button';
+  import { cn } from '$lib/utils';
 
-  async function handleSignOut() {
+  let loading = {
+    workouts: false,
+    exercises: false,
+    measurements: false
+  };
+  let error: string | null = null;
+  let latestWorkout: WorkoutLog | null = null;
+  let latestWorkoutTemplate: WorkoutTemplate | null = null;
+  let upcomingWorkout: WorkoutTemplate | null = null;
+  let exerciseCount = 0;
+  let measurements = {
+    current: { weight: 0, body_fat: 0 },
+    previous: { weight: 0, body_fat: 0 }
+  };
+
+  onMount(async () => {
+    await Promise.all([
+      loadLatestWorkout(),
+      loadUpcomingWorkout(),
+      loadExerciseCount(),
+      loadMeasurements()
+    ]);
+  });
+
+  async function loadLatestWorkout() {
     try {
-      await signOut();
-      authStore.clear();
-      await goto('/auth/login');
-    } catch (err) {
-      if (err instanceof Error) {
-        console.error('Error signing out:', err.message);
-      } else {
-        console.error('Error signing out:', err);
+      loading.workouts = true;
+      const response = await api.get('/workouts/logs?limit=1');
+      if (response.data.length > 0) {
+        latestWorkout = response.data[0];
+        if (latestWorkout.template_id) {
+          const templateResponse = await api.get(`/workouts/templates/${latestWorkout.template_id}`);
+          latestWorkoutTemplate = templateResponse.data;
+        }
       }
+    } catch (err) {
+      console.error('Failed to load latest workout:', err);
+    } finally {
+      loading.workouts = false;
     }
+  }
+
+  async function loadUpcomingWorkout() {
+    try {
+      const response = await api.get('/workouts/templates?limit=1');
+      if (response.data.length > 0) {
+        upcomingWorkout = response.data[0];
+      }
+    } catch (err) {
+      console.error('Failed to load upcoming workout:', err);
+    }
+  }
+
+  async function loadExerciseCount() {
+    try {
+      loading.exercises = true;
+      const response = await api.get('/exercises');
+      exerciseCount = response.data.length;
+    } catch (err) {
+      console.error('Failed to load exercises:', err);
+    } finally {
+      loading.exercises = false;
+    }
+  }
+
+  async function loadMeasurements() {
+    try {
+      loading.measurements = true;
+      const response = await api.get('/measurements/me?limit=2');
+      if (response.data.length > 0) {
+        measurements.current = response.data[0];
+        if (response.data.length > 1) {
+          measurements.previous = response.data[1];
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load measurements:', err);
+    } finally {
+      loading.measurements = false;
+    }
+  }
+
+  function getProgressIndicator(current: number, previous: number): string {
+    const diff = current - previous;
+    if (diff > 0) return '↑';
+    if (diff < 0) return '↓';
+    return '→';
+  }
+
+  function formatDate(date: string): string {
+    return new Date(date).toLocaleDateString();
   }
 </script>
 
-<div class="min-h-screen bg-gray-100">
-  <nav class="bg-white shadow-sm">
+<div class="py-10">
+  <header>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
-        <div class="flex">
-          <div class="flex-shrink-0 flex items-center">
-            <span class="text-2xl font-bold text-indigo-600">Fitholic</span>
-          </div>
-          <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-            <a href="/dashboard" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-              Dashboard
-            </a>
-            <a href="/workout" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-              Workout
-            </a>
-            <a href="/nutrition" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-              Nutrition
-            </a>
-            <a href="/progress" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-              Progress
-            </a>
-          </div>
-        </div>
-        <div class="flex items-center">
-          <button
-            on:click={handleSignOut}
-            class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Sign out
-          </button>
+      <h1 class="scroll-m-20 text-4xl font-bold tracking-tight">
+        {nav_welcome({ name: $authStore?.first_name || 'User' })}
+      </h1>
+    </div>
+  </header>
+  <main>
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+      <div class="px-4 py-8 sm:px-0">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
+
+          <!-- Next Workout Card -->
+          <Card.Root>
+            <Card.Header class="flex flex-row items-center gap-4">
+              <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <Card.Title>Next Workout</Card.Title>
+                {#if loading.workouts}
+                  <Card.Description>Loading...</Card.Description>
+                {:else if upcomingWorkout}
+                  <Card.Description>{upcomingWorkout.name}</Card.Description>
+                  <div class="text-sm text-muted-foreground">
+                    {upcomingWorkout.exercises.length} exercises
+                  </div>
+                {:else}
+                  <Card.Description>No workouts planned</Card.Description>
+                {/if}
+              </div>
+            </Card.Header>
+            <Card.Footer class="pt-5 flex justify-end">
+              <Button variant="outline" href="/dashboard/workouts?tab=sessions">
+                Plan next workout
+              </Button>
+            </Card.Footer>
+          </Card.Root>
+
+          <!-- Exercise Library Card -->
+          <Card.Root>
+            <Card.Header class="flex flex-row items-center gap-4">
+              <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <div>
+                <Card.Title>Exercise Library</Card.Title>
+                {#if loading.exercises}
+                  <Card.Description>Loading...</Card.Description>
+                {:else}
+                  <Card.Description>{exerciseCount} exercises</Card.Description>
+                  <div class="text-sm text-muted-foreground">
+                    Available in library
+                  </div>
+                {/if}
+              </div>
+            </Card.Header>
+            <Card.Footer class="pt-5 flex justify-end">
+              <Button variant="outline" href="/dashboard/exercises">
+                Browse exercises
+              </Button>
+            </Card.Footer>
+          </Card.Root>
+
+          <!-- Latest Workout Card -->
+          <Card.Root>
+            <Card.Header class="flex flex-row items-center gap-4">
+              <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <div>
+                <Card.Title>Latest Workout</Card.Title>
+                {#if loading.workouts}
+                  <Card.Description>Loading...</Card.Description>
+                {:else if latestWorkout}
+                  <Card.Description>
+                    {#if latestWorkoutTemplate}
+                      {latestWorkoutTemplate.name}
+                    {:else}
+                      Custom Workout
+                    {/if}
+                  </Card.Description>
+                  <div class="text-sm text-muted-foreground">
+                    Completed on {formatDate(latestWorkout.created_at)}
+                  </div>
+                {:else}
+                  <Card.Description>No workouts logged yet</Card.Description>
+                {/if}
+              </div>
+            </Card.Header>
+            <Card.Footer class="pt-5 flex justify-end">
+              <Button variant="outline" href="/dashboard/workouts">
+                View workout history
+              </Button>
+            </Card.Footer>
+          </Card.Root>
+
+          <!-- Body Measurements Card -->
+          <Card.Root>
+            <Card.Header class="flex flex-row items-center gap-4">
+              <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <div>
+                <Card.Title>Body Measurements</Card.Title>
+                {#if loading.measurements}
+                  <Card.Description>Loading...</Card.Description>
+                {:else if measurements.current.weight}
+                  <Card.Description>
+                    {measurements.current.weight} kg
+                    <span class="text-sm text-muted-foreground">
+                      {getProgressIndicator(measurements.current.weight, measurements.previous.weight)}
+                    </span>
+                  </Card.Description>
+                  <div class="text-sm text-muted-foreground">
+                    Body fat: {measurements.current.body_fat}%
+                    <span>
+                      {getProgressIndicator(measurements.current.body_fat, measurements.previous.body_fat)}
+                    </span>
+                  </div>
+                {:else}
+                  <Card.Description>No measurements recorded</Card.Description>
+                {/if}
+              </div>
+            </Card.Header>
+            <Card.Footer class="pt-5 flex justify-end">
+              <Button variant="outline" href="/dashboard/measurements">
+                Update measurements
+              </Button>
+            </Card.Footer>
+          </Card.Root>
+
         </div>
       </div>
     </div>
-  </nav>
-
-  <div class="py-10">
-    <header>
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-bold leading-tight text-gray-900">
-          Welcome back, {$authStore?.first_name || 'User'}!
-        </h1>
-      </div>
-    </header>
-    <main>
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="px-4 py-8 sm:px-0">
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <!-- Today's Workout Card -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-              <div class="p-5">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0">
-                    <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <div class="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt class="text-sm font-medium text-gray-500 truncate">
-                        Today's Workout
-                      </dt>
-                      <dd class="flex items-baseline">
-                        <div class="text-2xl font-semibold text-gray-900">
-                          Upper Body
-                        </div>
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-              <div class="bg-gray-50 px-5 py-3">
-                <div class="text-sm">
-                  <a href="/workout" class="font-medium text-indigo-600 hover:text-indigo-500">
-                    View details
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <!-- Nutrition Card -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-              <div class="p-5">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0">
-                    <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                    </svg>
-                  </div>
-                  <div class="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt class="text-sm font-medium text-gray-500 truncate">
-                        Today's Calories
-                      </dt>
-                      <dd class="flex items-baseline">
-                        <div class="text-2xl font-semibold text-gray-900">
-                          1,200 / 2,000
-                        </div>
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-              <div class="bg-gray-50 px-5 py-3">
-                <div class="text-sm">
-                  <a href="/nutrition" class="font-medium text-indigo-600 hover:text-indigo-500">
-                    Log meal
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <!-- Progress Card -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-              <div class="p-5">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0">
-                    <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
-                  <div class="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt class="text-sm font-medium text-gray-500 truncate">
-                        Weekly Progress
-                      </dt>
-                      <dd class="flex items-baseline">
-                        <div class="text-2xl font-semibold text-gray-900">
-                          On Track
-                        </div>
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-              <div class="bg-gray-50 px-5 py-3">
-                <div class="text-sm">
-                  <a href="/progress" class="font-medium text-indigo-600 hover:text-indigo-500">
-                    View progress
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
+  </main>
 </div> 

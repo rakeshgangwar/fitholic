@@ -227,7 +227,7 @@ const prioritizationMatrix = {
 **Monitoring and Optimization**
 ```typescript
 interface PerformanceOptimization {
-  area: 'frontend' | 'backend' | 'database' | 'ai';
+  area: 'frontend' | 'api' | 'database' | 'ai';
   metrics: {
     before: Record<string, number>;
     after: Record<string, number>;

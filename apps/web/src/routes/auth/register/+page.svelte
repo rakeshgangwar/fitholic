@@ -2,6 +2,14 @@
   import { enhance } from '$app/forms';
   import { goto } from '$app/navigation';
   import { signUp } from '$lib/utils/auth';
+  import { toast } from 'svelte-sonner';
+  
+  import { Button } from '$lib/components/ui/button';
+  import { Input } from '$lib/components/ui/input';
+  import { Label } from '$lib/components/ui/label';
+  import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '$lib/components/ui/card';
+  import { Alert, AlertTitle, AlertDescription } from '$lib/components/ui/alert';
+  import { AlertCircle } from 'lucide-svelte';
   
   let email = '';
   let password = '';
@@ -14,6 +22,7 @@
   async function handleSubmit() {
     if (password !== confirmPassword) {
       error = 'Passwords do not match';
+      toast.error(error);
       return;
     }
     
@@ -22,12 +31,15 @@
     
     try {
       await signUp(email, password, firstName, lastName);
+      toast.success('Account created successfully! Please sign in.');
       await goto('/auth/login?registered=true');
     } catch (err) {
       if (err instanceof Error) {
         error = err.message;
+        toast.error(error);
       } else {
         error = 'Registration failed. Please try again.';
+        toast.error(error);
       }
     } finally {
       loading = false;
@@ -35,109 +47,98 @@
   }
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8">
-    <div>
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-        Create your account
-      </h2>
-    </div>
-    <form class="mt-8 space-y-6" on:submit|preventDefault={handleSubmit}>
-      {#if error}
-        <div class="rounded-md bg-red-50 p-4">
-          <div class="text-sm text-red-700">{error}</div>
-        </div>
-      {/if}
-      
-      <div class="rounded-md shadow-sm -space-y-px">
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label for="firstName" class="sr-only">First name</label>
-            <input
+<div class="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+  <Card class="w-full max-w-md">
+    <CardHeader class="space-y-1">
+      <CardTitle class="text-2xl font-bold text-center">Create an account</CardTitle>
+      <CardDescription class="text-center">
+        Enter your details to create your account
+      </CardDescription>
+    </CardHeader>
+
+    <CardContent>
+      <form class="space-y-4" on:submit|preventDefault={handleSubmit}>
+        {#if error}
+          <Alert variant="destructive">
+            <AlertCircle class="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        {/if}
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <Label for="firstName">First name</Label>
+            <Input
               id="firstName"
-              name="firstName"
               type="text"
+              placeholder="Enter your first name"
               required
               bind:value={firstName}
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="First name"
               disabled={loading}
             />
           </div>
-          <div>
-            <label for="lastName" class="sr-only">Last name</label>
-            <input
+          <div class="space-y-2">
+            <Label for="lastName">Last name</Label>
+            <Input
               id="lastName"
-              name="lastName"
               type="text"
+              placeholder="Enter your last name"
               required
               bind:value={lastName}
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Last name"
               disabled={loading}
             />
           </div>
         </div>
-        <div>
-          <label for="email" class="sr-only">Email address</label>
-          <input
+
+        <div class="space-y-2">
+          <Label for="email">Email</Label>
+          <Input
             id="email"
-            name="email"
             type="email"
+            placeholder="Enter your email"
             required
             bind:value={email}
-            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-            placeholder="Email address"
             disabled={loading}
           />
         </div>
-        <div>
-          <label for="password" class="sr-only">Password</label>
-          <input
+
+        <div class="space-y-2">
+          <Label for="password">Password</Label>
+          <Input
             id="password"
-            name="password"
             type="password"
+            placeholder="Create a password"
             required
             bind:value={password}
-            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-            placeholder="Password"
             disabled={loading}
           />
         </div>
-        <div>
-          <label for="confirmPassword" class="sr-only">Confirm password</label>
-          <input
+
+        <div class="space-y-2">
+          <Label for="confirmPassword">Confirm password</Label>
+          <Input
             id="confirmPassword"
-            name="confirmPassword"
             type="password"
+            placeholder="Confirm your password"
             required
             bind:value={confirmPassword}
-            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-            placeholder="Confirm password"
             disabled={loading}
           />
         </div>
-      </div>
 
-      <div>
-        <button
-          type="submit"
-          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-          disabled={loading}
-        >
-          {#if loading}
-            Creating account...
-          {:else}
-            Create account
-          {/if}
-        </button>
-      </div>
-      
-      <div class="text-sm text-center">
-        <a href="/auth/login" class="font-medium text-indigo-600 hover:text-indigo-500">
+        <Button type="submit" class="w-full" disabled={loading}>
+          {loading ? 'Creating account...' : 'Create account'}
+        </Button>
+      </form>
+    </CardContent>
+
+    <CardFooter>
+      <div class="text-sm text-center w-full">
+        <a href="/auth/login" class="text-primary hover:text-primary/90 font-medium">
           Already have an account? Sign in
         </a>
       </div>
-    </form>
-  </div>
+    </CardFooter>
+  </Card>
 </div> 

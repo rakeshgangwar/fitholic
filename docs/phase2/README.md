@@ -1,7 +1,7 @@
 ## Phase 2: Core Features (Weeks 5-8)
 
 ### Overview
-This phase focuses on implementing the core features of the application, including workout management, user profiles, basic AI integration, and enhanced security features. The goal is to create a functional fitness application with essential features and robust security measures.
+This phase focuses on implementing the core features of the application, including workout management, user profiles, and basic AI integration. The goal is to create a functional web-based fitness application with essential features and robust security measures.
 
 ### Timeline
 - Week 5: Exercise Library & Workout Management
@@ -228,31 +228,6 @@ src/lib/components/
     ├── ProfileEditor.svelte
     ├── ProgressChart.svelte
     └── SettingsPanel.svelte
-```
-
-**Mobile Components (Flutter)**
-```
-lib/
-├── widgets/
-│   ├── exercises/
-│   │   ├── exercise_card.dart
-│   │   ├── exercise_detail.dart
-│   │   └── exercise_form.dart
-│   ├── workouts/
-│   │   ├── workout_planner.dart
-│   │   ├── workout_logger.dart
-│   │   └── workout_summary.dart
-│   └── profile/
-│       ├── profile_editor.dart
-│       ├── progress_chart.dart
-│       └── settings_panel.dart
-├── screens/
-│   ├── home_screen.dart
-│   ├── workout_screen.dart
-│   └── profile_screen.dart
-└── utils/
-    ├── theme.dart
-    └── constants.dart
 ```
 
 ### Testing Requirements
