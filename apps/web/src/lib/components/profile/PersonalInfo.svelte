@@ -1,8 +1,20 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-    import { Button, Label, Input, Select } from 'flowbite-svelte';
     import type { UserProfile, UserProfileUpdate } from '$lib/types';
     import { api } from '$lib/api';
+    import { cn } from '$lib/utils';
+    
+    import { Input } from '$lib/components/ui/input';
+    import { Label } from '$lib/components/ui/label';
+    import { Button } from '$lib/components/ui/button';
+    import { Checkbox } from '$lib/components/ui/checkbox';
+    import { toast } from 'svelte-sonner';
+    import { Select, SelectTrigger, SelectContent, SelectItem } from '$lib/components/ui/select';
+    import { Alert, AlertTitle, AlertDescription } from '$lib/components/ui/alert';
+    import { Calendar } from '$lib/components/ui/calendar';
+    import * as Popover from '$lib/components/ui/popover';
+    import { AlertCircle, CalendarIcon } from 'lucide-svelte';
+    import { DateFormatter, type DateValue, getLocalTimeZone, parseDate, today } from '@internationalized/date';
 
     export let profile: UserProfile;
 
@@ -10,7 +22,9 @@
     let saving = false;
     let error: string | null = null;
 
-    console.log(profile);
+    const df = new DateFormatter('en-US', {
+        dateStyle: 'long'
+    });
 
     // Form data
     let formData: UserProfileUpdate = {
@@ -23,6 +37,8 @@
         preferred_workout_days: profile.preferred_workout_days || [],
         available_equipment: profile.available_equipment || []
     };
+
+    let dateValue: DateValue | undefined = formData.date_of_birth ? parseDate(formData.date_of_birth) : undefined;
 
     const genderOptions = [
         { value: 'male', label: 'Male' },
@@ -58,170 +74,224 @@
         'Sunday'
     ];
 
-    async function handleSubmit() {
+    async function handleSubmit(event: SubmitEvent) {
+        event.preventDefault();
         try {
             saving = true;
             error = null;
             await api.put('/profiles/me', formData);
+            toast.success('Profile updated successfully');
             dispatch('saved');
         } catch (e: any) {
             error = e.message || 'Failed to save profile';
+            toast.error(error);
         } finally {
             saving = false;
         }
     }
 </script>
 
-<form on:submit|preventDefault={handleSubmit} class="space-y-6">
-    {#if error}
-        <div class="text-red-500 mb-4">{error}</div>
-    {/if}
+<form class="space-y-8" on:submit={handleSubmit}>
 
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <!-- Height -->
-        <div>
-            <Label for="height">Height (cm)</Label>
-            <input
-                type="number"
-                id="height"
-                bind:value={formData.height}
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="Enter your height"
-            />
+    <!-- Basic Information Section -->
+    <div class="space-y-6">
+        <div class="border-b pb-2">
+            <h3 class="text-lg font-medium">Basic Information</h3>
+            <p class="text-sm text-muted-foreground">Your personal measurements and details.</p>
         </div>
+        
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <!-- Height -->
+            <div class="space-y-2">
+                <Label for="height">Height (cm)</Label>
+                <Input 
+                    type="number" 
+                    id="height"
+                    bind:value={formData.height}
+                    placeholder="Enter your height"
+                />
+            </div>
 
-        <!-- Weight -->
-        <div>
-            <Label for="weight">Weight (kg)</Label>
-            <input
-                type="number"
-                id="weight"
-                bind:value={formData.weight}
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="Enter your weight"
-            />
-        </div>
+            <!-- Weight -->
+            <div class="space-y-2">
+                <Label for="weight">Weight (kg)</Label>
+                <Input 
+                    type="number" 
+                    id="weight"
+                    bind:value={formData.weight}
+                    placeholder="Enter your weight"
+                />
+            </div>
 
-        <!-- Date of Birth -->
-        <div>
-            <Label for="dob">Date of Birth</Label>
-            <input
-                type="date"
-                id="dob"
-                bind:value={formData.date_of_birth}
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
-        </div>
+            <!-- Date of Birth -->
+            <div class="space-y-2">
+                <Label>Date of Birth</Label>
+                <div>
+                    <Popover.Root>
+                        <Popover.Trigger>
+                            <div>
+                                <Button
+                                    variant="outline"
+                                    class={cn(
+                                        "w-full justify-start text-left font-normal",
+                                        !dateValue && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon class="mr-2 h-4 w-4" />
+                                    {dateValue ? df.format(dateValue.toDate(getLocalTimeZone())) : "Pick a date"}
+                                </Button>
+                            </div>
+                        </Popover.Trigger>
+                        <Popover.Content class="w-auto p-0" align="start">
+                            <Calendar 
+                                value={dateValue}
+                                onValueChange={(value: DateValue) => {
+                                    dateValue = value;
+                                    if (value) {
+                                        formData.date_of_birth = value.toString();
+                                    } else {
+                                        formData.date_of_birth = undefined;
+                                    }
+                                }}
+                                maxValue={today(getLocalTimeZone())}
+                            />
+                        </Popover.Content>
+                    </Popover.Root>
+                </div>
+            </div>
 
-        <!-- Gender -->
-        <div>
-            <Label for="gender">Gender</Label>
-            <select
-                id="gender"
-                bind:value={formData.gender}
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            >
-                <option value="">Choose option...</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-                <option value="prefer_not_to_say">Prefer not to say</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- Fitness Goals -->
-    <div>
-        <Label>Fitness Goals</Label>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {#each fitnessGoalOptions as goal}
-                <label class="flex items-center space-x-2">
-                    <input
-                        type="checkbox"
-                        value={goal}
-                        checked={formData.fitness_goals?.includes(goal)}
-                        on:change={(e) => {
-                            if (e.currentTarget.checked) {
-                                formData.fitness_goals = [...(formData.fitness_goals || []), goal];
-                            } else {
-                                formData.fitness_goals = formData.fitness_goals?.filter(g => g !== goal);
-                            }
-                        }}
-                    />
-                    <span>{goal}</span>
-                </label>
-            {/each}
-        </div>
-    </div>
-
-    <!-- Workout Preferences -->
-    <div class="mt-6">
-        <Label for="duration">Preferred Workout Duration (minutes)</Label>
-        <input
-            type="number"
-            id="duration"
-            bind:value={formData.preferred_workout_duration}
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            min="15"
-            max="180"
-            step="15"
-        />
-    </div>
-
-    <div>
-        <Label>Preferred Workout Days</Label>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {#each daysOfWeek as day}
-                <label class="flex items-center space-x-2">
-                    <input
-                        type="checkbox"
-                        value={day}
-                        checked={formData.preferred_workout_days?.includes(day)}
-                        on:change={(e) => {
-                            if (e.currentTarget.checked) {
-                                formData.preferred_workout_days = [...(formData.preferred_workout_days || []), day];
-                            } else {
-                                formData.preferred_workout_days = formData.preferred_workout_days?.filter(d => d !== day);
-                            }
-                        }}
-                    />
-                    <span>{day}</span>
-                </label>
-            {/each}
+            <!-- Gender -->
+            <div class="space-y-2">
+                <Label for="gender">Gender</Label>
+                <Select bind:value={formData.gender}>
+                    <SelectTrigger class="w-full">
+                        <span class="text-muted-foreground">{formData.gender || 'Choose option...'}</span>
+                    </SelectTrigger>
+                    <SelectContent>
+                        {#each genderOptions as option}
+                            <SelectItem value={option.value}>{option.label}</SelectItem>
+                        {/each}
+                    </SelectContent>
+                </Select>
+            </div>
         </div>
     </div>
 
-    <!-- Available Equipment -->
-    <div>
-        <Label>Available Equipment</Label>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {#each equipmentOptions as equipment}
-                <label class="flex items-center space-x-2">
-                    <input
-                        type="checkbox"
-                        value={equipment}
-                        checked={formData.available_equipment?.includes(equipment)}
-                        on:change={(e) => {
-                            if (e.currentTarget.checked) {
-                                formData.available_equipment = [...(formData.available_equipment || []), equipment];
-                            } else {
-                                formData.available_equipment = formData.available_equipment?.filter(eq => eq !== equipment);
-                            }
-                        }}
-                    />
-                    <span>{equipment}</span>
-                </label>
-            {/each}
+    <!-- Fitness Goals Section -->
+    <div class="space-y-6">
+        <div class="border-b pb-2">
+            <h3 class="text-lg font-medium">Fitness Goals</h3>
+            <p class="text-sm text-muted-foreground">Select your fitness objectives and preferences.</p>
+        </div>
+
+        <div class="space-y-4">
+            <div class="space-y-4">
+                <Label>What are your fitness goals?</Label>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {#each fitnessGoalOptions as goal}
+                        <div class="flex items-center space-x-2">
+                            <Checkbox
+                                id={`goal-${goal}`}
+                                checked={formData.fitness_goals?.includes(goal)}
+                                onCheckedChange={(checked: boolean) => {
+                                    if (checked) {
+                                        formData.fitness_goals = [...(formData.fitness_goals || []), goal];
+                                    } else {
+                                        formData.fitness_goals = formData.fitness_goals?.filter((g: string) => g !== goal);
+                                    }
+                                }}
+                            />
+                            <Label for={`goal-${goal}`} class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                {goal}
+                            </Label>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+
+            <!-- Workout Duration -->
+            <div class="space-y-2 pt-4">
+                <Label for="duration">Preferred Workout Duration</Label>
+                <p class="text-sm text-muted-foreground pb-2">How long do you prefer your workouts to be?</p>
+                <Input 
+                    type="number"
+                    id="duration"
+                    bind:value={formData.preferred_workout_duration}
+                    min="15"
+                    max="180"
+                    step="15"
+                    class="max-w-[200px]"
+                />
+                <p class="text-sm text-muted-foreground">Minutes (15-180)</p>
+            </div>
         </div>
     </div>
 
-    <div class="flex justify-end mt-6">
-        <button 
-            type="submit" 
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            disabled={saving}
-        >
+    <!-- Schedule & Equipment Section -->
+    <div class="space-y-6">
+        <div class="border-b pb-2">
+            <h3 class="text-lg font-medium">Schedule & Equipment</h3>
+            <p class="text-sm text-muted-foreground">Your workout schedule and available equipment.</p>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Workout Days -->
+            <div class="space-y-4">
+                <Label>Preferred Workout Days</Label>
+                <p class="text-sm text-muted-foreground">Select the days you're available to work out.</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {#each daysOfWeek as day}
+                        <div class="flex items-center space-x-2">
+                            <Checkbox
+                                id={`day-${day}`}
+                                checked={formData.preferred_workout_days?.includes(day)}
+                                onCheckedChange={(checked: boolean) => {
+                                    if (checked) {
+                                        formData.preferred_workout_days = [...(formData.preferred_workout_days || []), day];
+                                    } else {
+                                        formData.preferred_workout_days = formData.preferred_workout_days?.filter((d: string) => d !== day);
+                                    }
+                                }}
+                            />
+                            <Label for={`day-${day}`} class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                {day}
+                            </Label>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+
+            <!-- Equipment -->
+            <div class="space-y-4">
+                <Label>Available Equipment</Label>
+                <p class="text-sm text-muted-foreground">What equipment do you have access to?</p>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {#each equipmentOptions as equipment}
+                        <div class="flex items-center space-x-2">
+                            <Checkbox
+                                id={`equipment-${equipment}`}
+                                checked={formData.available_equipment?.includes(equipment)}
+                                onCheckedChange={(checked: boolean) => {
+                                    if (checked) {
+                                        formData.available_equipment = [...(formData.available_equipment || []), equipment];
+                                    } else {
+                                        formData.available_equipment = formData.available_equipment?.filter((eq: string) => eq !== equipment);
+                                    }
+                                }}
+                            />
+                            <Label for={`equipment-${equipment}`} class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                {equipment}
+                            </Label>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex justify-end pt-6">
+        <Button type="submit" disabled={saving}>
             {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+        </Button>
     </div>
 </form> 

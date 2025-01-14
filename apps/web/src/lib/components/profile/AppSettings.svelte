@@ -1,11 +1,18 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-    import { Button, Label, Toggle } from 'flowbite-svelte';
     import type { UserProfile, UserProfileUpdate } from '$lib/types';
     import { api } from '$lib/api';
     import { theme } from '$lib/stores/theme';
     import { language } from '$lib/stores/language';
     import { units } from '$lib/stores/units';
+    
+    import { Label } from '$lib/components/ui/label';
+    import { Button } from '$lib/components/ui/button';
+    import { Switch } from '$lib/components/ui/switch';
+    import { Alert, AlertTitle, AlertDescription } from '$lib/components/ui/alert';
+    import { AlertCircle } from 'lucide-svelte';
+    import { cn } from '$lib/utils';
+    
     import { 
         settings_theme_options_light,
         settings_theme_options_dark,
@@ -125,58 +132,64 @@
 
 <div class="space-y-6">
     {#if error}
-        <div class="text-red-500 mb-4 rounded-md bg-red-50 p-2">{error}</div>
+        <Alert variant="destructive">
+            <AlertCircle class="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+        </Alert>
     {/if}
 
     <div class="space-y-6">
         <!-- Theme -->
-        <div class="flex flex-col gap-4">
-            <Label>{settings_theme_label()}</Label>
+        <div class="space-y-4">
+            <div>
+                <Label>{settings_theme_label()}</Label>
+                <p class="text-sm text-muted-foreground">{settings_theme_description()}</p>
+            </div>
             <div class="flex gap-4">
                 {#each themeOptions as option}
-                    <button
-                        class="px-4 py-2 rounded-md {$theme === option.value ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+                    <Button
+                        variant={$theme === option.value ? 'default' : 'outline'}
+                        size="sm"
                         on:click={() => debouncedThemeUpdate(option.value)}
                     >
                         {option.label}
-                    </button>
+                    </Button>
                 {/each}
             </div>
-            <p class="text-sm text-gray-500">{settings_theme_description()}</p>
         </div>
 
         <!-- Language -->
-        <div class="flex flex-col gap-4">
-            <Label>{settings_language_label()}</Label>
+        <div class="space-y-4">
+            <div>
+                <Label>{settings_language_label()}</Label>
+                <p class="text-sm text-muted-foreground">{settings_language_description()}</p>
+            </div>
             <div class="flex gap-4 flex-wrap">
                 {#each languageOptions as option}
-                    <button
-                        class="px-4 py-2 rounded-md {$language === option.value ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+                    <Button
+                        variant={$language === option.value ? 'default' : 'outline'}
+                        size="sm"
                         on:click={() => updateLanguage(option.value)}
                     >
                         {option.label}
-                    </button>
+                    </Button>
                 {/each}
             </div>
-            <p class="text-sm text-gray-500">{settings_language_description()}</p>
         </div>
 
         <!-- Units Toggle -->
         <div class="flex items-center justify-between">
-            <div>
+            <div class="space-y-1">
                 <Label>{settings_units_label()}</Label>
-                <p class="text-sm text-gray-500">
+                <p class="text-sm text-muted-foreground">
                     {$units === 'metric' ? settings_units_metric() : settings_units_imperial()}
                 </p>
             </div>
-            <Toggle
+            <Switch
                 checked={$units === 'imperial'}
                 on:change={toggleUnits}
-                class="w-20"
-            >
-                <div slot="offLabel">{settings_units_metric()}</div>
-                <div slot="default">{$units === 'metric' ? settings_units_metric() : settings_units_imperial()}</div>
-            </Toggle>
+            />
         </div>
     </div>
 </div> 

@@ -1,9 +1,13 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-    import { Label } from 'flowbite-svelte';
-    import Toggle from '$lib/components/common/Toggle.svelte';
     import type { UserProfile, UserProfileUpdate } from '$lib/types';
     import { api } from '$lib/api';
+
+    import { Label } from '$lib/components/ui/label';
+    import { Button } from '$lib/components/ui/button';
+    import { Switch } from '$lib/components/ui/switch';
+    import { Alert, AlertTitle, AlertDescription } from '$lib/components/ui/alert';
+    import { AlertCircle } from 'lucide-svelte';
 
     // Define the NotificationSettings type
     interface NotificationSettings {
@@ -37,7 +41,8 @@
         formData.notification_settings[setting] = value;
     };
 
-    async function handleSubmit() {
+    async function handleSubmit(event: SubmitEvent) {
+        event.preventDefault();
         try {
             saving = true;
             error = null;
@@ -51,62 +56,62 @@
     }
 </script>
 
-<form on:submit|preventDefault={handleSubmit} class="space-y-6">
+<form class="space-y-6" on:submit={handleSubmit}>
     {#if error}
-        <div class="text-red-500 mb-4">{error}</div>
+        <Alert variant="destructive">
+            <AlertCircle class="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+        </Alert>
     {/if}
 
-    <div class="space-y-4">
+    <div class="space-y-6">
         <!-- Workout Reminders -->
         <div class="flex items-center justify-between">
-            <div>
+            <div class="space-y-1">
                 <Label>Workout Reminders</Label>
-                <p class="text-sm text-gray-500">
+                <p class="text-sm text-muted-foreground">
                     Get notified about your scheduled workouts
                 </p>
             </div>
-            <Toggle
+            <Switch
                 checked={formData.notification_settings?.workout_reminders ?? false}
-                on:change={(e: CustomEvent<{ checked: boolean }>) => updateNotificationSetting('workout_reminders', e.detail.checked)}
+                on:change={(e) => updateNotificationSetting('workout_reminders', e.currentTarget.checked)}
             />
         </div>
 
         <!-- Progress Updates -->
         <div class="flex items-center justify-between">
-            <div>
+            <div class="space-y-1">
                 <Label>Progress Updates</Label>
-                <p class="text-sm text-gray-500">
+                <p class="text-sm text-muted-foreground">
                     Receive updates about your fitness progress
                 </p>
             </div>
-            <Toggle
+            <Switch
                 checked={formData.notification_settings?.progress_updates ?? false}
-                on:change={(e: CustomEvent<{ checked: boolean }>) => updateNotificationSetting('progress_updates', e.detail.checked)}
+                on:change={(e) => updateNotificationSetting('progress_updates', e.currentTarget.checked)}
             />
         </div>
 
         <!-- Achievement Alerts -->
         <div class="flex items-center justify-between">
-            <div>
+            <div class="space-y-1">
                 <Label>Achievement Alerts</Label>
-                <p class="text-sm text-gray-500">
+                <p class="text-sm text-muted-foreground">
                     Get notified when you reach fitness milestones
                 </p>
             </div>
-            <Toggle
+            <Switch
                 checked={formData.notification_settings?.achievement_alerts ?? false}
-                on:change={(e: CustomEvent<{ checked: boolean }>) => updateNotificationSetting('achievement_alerts', e.detail.checked)}
+                on:change={(e) => updateNotificationSetting('achievement_alerts', e.currentTarget.checked)}
             />
         </div>
     </div>
 
-    <div class="flex justify-end mt-6">
-        <button 
-            type="submit" 
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            disabled={saving}
-        >
+    <div class="flex justify-end">
+        <Button type="submit" disabled={saving}>
             {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+        </Button>
     </div>
 </form> 

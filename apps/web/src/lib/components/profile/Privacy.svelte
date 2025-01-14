@@ -1,9 +1,14 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-    import { Button, Label, Select } from 'flowbite-svelte';
-    import Toggle from '$lib/components/common/Toggle.svelte';
     import type { UserProfile, UserProfileUpdate } from '$lib/types';
     import { api } from '$lib/api';
+
+    import { Label } from '$lib/components/ui/label';
+    import { Button } from '$lib/components/ui/button';
+    import { Switch } from '$lib/components/ui/switch';
+    import { Select, SelectTrigger, SelectContent, SelectItem } from '$lib/components/ui/select';
+    import { Alert, AlertTitle, AlertDescription } from '$lib/components/ui/alert';
+    import { AlertCircle } from 'lucide-svelte';
 
     export let profile: UserProfile;
 
@@ -19,6 +24,11 @@
             share_progress: profile.privacy_settings?.share_progress ?? false
         }
     };
+
+    let profileVisibility = formData.privacy_settings?.profile_visibility ?? 'private';
+    $: if (formData.privacy_settings) {
+        formData.privacy_settings.profile_visibility = profileVisibility;
+    }
 
     const visibilityOptions = [
         { value: 'public', label: 'Public - Anyone can view' },
@@ -38,7 +48,8 @@
         formData.privacy_settings[setting] = value;
     };
 
-    async function handleSubmit() {
+    async function handleSubmit(event: SubmitEvent) {
+        event.preventDefault();
         try {
             saving = true;
             error = null;
@@ -52,70 +63,66 @@
     }
 </script>
 
-<form on:submit|preventDefault={handleSubmit} class="space-y-6">
+<form class="space-y-6" on:submit={handleSubmit}>
     {#if error}
-        <div class="text-red-500 mb-4">{error}</div>
+        <Alert variant="destructive">
+            <AlertCircle class="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+        </Alert>
     {/if}
 
-    <div class="space-y-4">
+    <div class="space-y-6">
         <!-- Profile Visibility -->
-        <div>
+        <div class="space-y-2">
             <Label for="visibility">Profile Visibility</Label>
-            <select 
-                id="visibility"
-                value={formData.privacy_settings?.profile_visibility ?? 'private'}
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                on:change={(e) => {
-                    if (formData.privacy_settings) {
-                        formData.privacy_settings.profile_visibility = (e.target as HTMLSelectElement).value as 'public' | 'private' | 'friends';
-                    }
-                }}
-            >
-                {#each visibilityOptions as option}
-                    <option value={option.value}>{option.label}</option>
-                {/each}
-            </select>
-            <p class="text-sm text-gray-500 mt-1">
+            <Select value={profileVisibility} onValueChange={(value: string) => profileVisibility = value as 'public' | 'private' | 'friends'}>
+                <SelectTrigger class="w-full">
+                    <span class="text-muted-foreground">{profileVisibility || 'Select visibility'}</span>
+                </SelectTrigger>
+                <SelectContent>
+                    {#each visibilityOptions as option}
+                        <SelectItem value={option.value}>{option.label}</SelectItem>
+                    {/each}
+                </SelectContent>
+            </Select>
+            <p class="text-sm text-muted-foreground">
                 Control who can view your profile information
             </p>
         </div>
 
         <!-- Share Workouts -->
         <div class="flex items-center justify-between">
-            <div>
+            <div class="space-y-1">
                 <Label>Share Workouts</Label>
-                <p class="text-sm text-gray-500">
+                <p class="text-sm text-muted-foreground">
                     Allow others to see your workout history
                 </p>
             </div>
-            <Toggle
+            <Switch
                 checked={formData.privacy_settings?.share_workouts ?? false}
-                on:change={(e: CustomEvent<{ checked: boolean }>) => updatePrivacySetting('share_workouts', e.detail.checked)}
+                onCheckedChange={(checked: boolean) => updatePrivacySetting('share_workouts', checked)}
             />
         </div>
 
         <!-- Share Progress -->
         <div class="flex items-center justify-between">
-            <div>
+            <div class="space-y-1">
                 <Label>Share Progress</Label>
-                <p class="text-sm text-gray-500">
+                <p class="text-sm text-muted-foreground">
                     Allow others to see your fitness progress
                 </p>
             </div>
-            <Toggle
+            <Switch
                 checked={formData.privacy_settings?.share_progress ?? false}
-                on:change={(e: CustomEvent<{ checked: boolean }>) => updatePrivacySetting('share_progress', e.detail.checked)}
+                onCheckedChange={(checked: boolean) => updatePrivacySetting('share_progress', checked)}
             />
         </div>
     </div>
 
-    <div class="flex justify-end mt-6">
-        <button 
-            type="submit" 
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            disabled={saving}
-        >
+    <div class="flex justify-end">
+        <Button type="submit" disabled={saving}>
             {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+        </Button>
     </div>
 </form> 
