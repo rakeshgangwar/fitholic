@@ -5,6 +5,7 @@
     import { theme } from '$lib/stores/theme';
     import { language } from '$lib/stores/language';
     import { units } from '$lib/stores/units';
+    import { toast } from 'svelte-sonner';
     
     import { Label } from '$lib/components/ui/label';
     import { Button } from '$lib/components/ui/button';
@@ -66,55 +67,48 @@
         { value: 'hi' as const, label: settings_language_options_hi() }
     ];
 
-    // Debounce function to prevent too many API calls
-    function debounce(func: Function, wait: number) {
-        let timeout: NodeJS.Timeout;
-        return function executedFunction(...args: any[]) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-
     // Update theme with immediate effect and persist to backend
-    const updateTheme = async (newTheme: 'light' | 'dark' | 'system') => {
+    async function updateTheme(newTheme: 'light' | 'dark' | 'system') {
+        console.log('Theme update called with:', newTheme);
         try {
             error = null;
             theme.set(newTheme);
             await api.put('/profiles/me', { theme: newTheme });
             dispatch('saved');
         } catch (e: any) {
+            console.error('Error updating theme:', e);
             error = e.message || settings_errors_save_theme_failed();
             // Revert on error
             if (profile.theme && (profile.theme === 'light' || profile.theme === 'dark' || profile.theme === 'system')) {
                 theme.set(profile.theme);
             }
         }
-    };
-
-    // Debounced theme update
-    const debouncedThemeUpdate = debounce(updateTheme, 300);
+    }
 
     // Update language with immediate effect
-    const updateLanguage = async (newLanguage: 'en' | 'es' | 'fr' | 'de') => {
+    async function updateLanguage(newLanguage: 'en' | 'es' | 'fr' | 'de' | 'hi') {
+        console.log('Language update called with:', newLanguage);
         try {
             error = null;
+            const response = await api.put('/profiles/me', { language: newLanguage });
+            console.log('Language update response:', response);
             language.set(newLanguage);
-            await api.put('/profiles/me', { language: newLanguage });
+            toast.success('Language updated successfully');
+            // Dispatch saved event with skipRefresh flag
             dispatch('saved');
         } catch (e: any) {
+            console.error('Error updating language:', e);
             error = e.message || settings_errors_save_language_failed();
-            if (profile.language && (profile.language === 'en' || profile.language === 'es' || profile.language === 'fr' || profile.language === 'de')) {
+            toast.error(error);
+            // Revert on error
+            if (profile.language && (profile.language === 'en' || profile.language === 'es' || profile.language === 'fr' || profile.language === 'de' || profile.language === 'hi')) {
                 language.set(profile.language);
             }
         }
-    };
+    }
 
     // Toggle between metric and imperial units
-    const toggleUnits = async () => {
+    async function toggleUnits() {
         const newUnits = $units === 'metric' ? 'imperial' : 'metric';
         try {
             error = null;
@@ -127,7 +121,7 @@
                 units.set(profile.units);
             }
         }
-    };
+    }
 </script>
 
 <div class="space-y-6">
@@ -148,13 +142,18 @@
             </div>
             <div class="flex gap-4">
                 {#each themeOptions as option}
-                    <Button
-                        variant={$theme === option.value ? 'default' : 'outline'}
-                        size="sm"
-                        on:click={() => debouncedThemeUpdate(option.value)}
+                    <button
+                        type="button"
+                        class={cn(
+                            "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2",
+                            $theme === option.value
+                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                                : "border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                        )}
+                        on:click={() => updateTheme(option.value)}
                     >
                         {option.label}
-                    </Button>
+                    </button>
                 {/each}
             </div>
         </div>
@@ -167,13 +166,18 @@
             </div>
             <div class="flex gap-4 flex-wrap">
                 {#each languageOptions as option}
-                    <Button
-                        variant={$language === option.value ? 'default' : 'outline'}
-                        size="sm"
+                    <button
+                        type="button"
+                        class={cn(
+                            "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2",
+                            $language === option.value
+                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                                : "border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                        )}
                         on:click={() => updateLanguage(option.value)}
                     >
                         {option.label}
-                    </Button>
+                    </button>
                 {/each}
             </div>
         </div>

@@ -139,7 +139,7 @@
                     </Alert.Root>
                 {:else if profile}
                     <Tabs.Root value={activeTab} class="mt-2" onValueChange={(value: string) => activeTab = value}>
-                        <div class="border-b">
+                        <div>
                             <div class="overflow-x-auto">
                                 <Tabs.List class="inline-flex h-10 items-center justify-start px-1 w-full md:w-auto">
                                     {#each tabs as tab}
