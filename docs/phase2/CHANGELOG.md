@@ -5,7 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.10] - 2024-01-13
+## [2.0.11] - 2024-01-14
+
+### Changed
+- Updated ExerciseView component layout:
+  - Moved video section between instructions and exercise headings
+  - Placed video on the left side, muscle group and equipment on the right side
+  - Improved markdown rendering for instructions
+  - Enhanced styling for better visual hierarchy
+
+### Fixed
+- Addressed markdown header rendering issues in ExerciseView
+- Improved handling of line breaks and markdown syntax in instructions
+
+## [2.0.10] - 2024-01-14
 
 ### Changed
 - Enhanced UI components with shadcn UI library
