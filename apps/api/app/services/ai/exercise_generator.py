@@ -17,7 +17,7 @@ class ExerciseDetails(BaseModel):
     muscle_groups: List[str] = Field(..., description="List of primary and secondary muscle groups targeted")
     equipment: List[str] = Field(..., description="List of required equipment (if any)")
     difficulty: str = Field(..., description="The appropriate difficulty level (beginner, intermediate, advanced)")
-    instructions: str = Field(..., description="Detailed step-by-step instructions for performing the exercise")
+    instructions: str = Field(..., description="Detailed step-by-step instructions for performing the exercise in markdown format")
     video_url: Optional[str] = Field(None, description="URL of a YouTube video demonstrating the exercise")
 
 # Define the prompt template using ChatPromptTemplate for better structure

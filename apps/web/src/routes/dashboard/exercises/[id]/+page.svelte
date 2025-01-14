@@ -5,6 +5,10 @@
 	import type { Exercise } from '$lib/types';
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
+	import { buttonVariants } from '$lib/components/ui/button';
+	import { ArrowLeft, AlertCircle, Loader2 } from 'lucide-svelte';
+	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
+	import { cn } from '$lib/utils';
 
 	let exercise: Exercise | null = null;
 	let loading = true;
@@ -35,27 +39,45 @@
 			error = e instanceof Error ? e.message : 'Failed to delete exercise';
 		}
 	}
+
+	function handleBack() {
+		goto('/dashboard/exercises');
+	}
 </script>
 
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8 max-w-5xl">
+	<div class="mb-6">
+		<button 
+			type="button"
+			class={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-2')}
+			on:click={handleBack}
+		>
+			<ArrowLeft class="h-4 w-4" />
+			Back to Exercises
+		</button>
+	</div>
+
 	{#if loading}
 		<div class="flex justify-center items-center min-h-[400px]">
-			<div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-green-500"></div>
+			<Loader2 class="h-8 w-8 animate-spin text-primary" />
 		</div>
 	{:else if error}
-		<div class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-			<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-			</svg>
-			<h2 class="mt-4 text-lg font-medium text-red-800">Error Loading Exercise</h2>
-			<p class="mt-2 text-sm text-red-600">{error}</p>
-			<button
-				class="mt-4 inline-flex items-center rounded-lg bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 transition-colors duration-200"
-				on:click={() => goto('/dashboard/exercises')}
-			>
-				Return to Exercise List
-			</button>
-		</div>
+		<Alert variant="destructive">
+			<AlertCircle class="h-4 w-4" />
+			<AlertTitle>Error Loading Exercise</AlertTitle>
+			<AlertDescription>
+				{error}
+				<div class="mt-4">
+					<button 
+						type="button"
+						class={buttonVariants({ variant: 'outline' })}
+						on:click={handleBack}
+					>
+						Return to Exercise List
+					</button>
+				</div>
+			</AlertDescription>
+		</Alert>
 	{:else if exercise}
 		<ExerciseView {exercise} onEdit={handleEdit} onDelete={handleDelete} />
 	{/if}

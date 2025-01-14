@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.10] - 2024-01-13
+
+### Changed
+- Enhanced UI components with shadcn UI library
+  - Updated profile management components:
+    - Personal Info form with improved validation
+    - App Settings with theme and language controls
+    - Notifications panel with better toggles
+    - Privacy settings with role-based controls
+  - Enhanced exercise management interface:
+    - Exercise list with card and table views
+    - Exercise form with better organization
+    - Exercise filters with improved search
+    - Exercise modal with video preview
+  - Improved form components:
+    - Added proper form validation
+    - Enhanced error handling
+    - Better loading states
+    - Improved accessibility
+  - Updated authentication pages:
+    - Login page with new design
+    - Registration page with matching style
+    - Added theme switcher to login page
+
+### Fixed
+- Theme synchronization between profile and UI
+- Form field validation and error states
+- Video URL handling in exercise components
+- Message key consistency in translations
+
 ## [2.0.9] - 2024-01-13
 
 ### Added

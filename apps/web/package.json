@@ -58,6 +58,7 @@
 		"axios": "^1.7.9",
 		"date-fns": "^4.1.0",
 		"flowbite-svelte": "^0.47.4",
+		"marked": "^15.0.6",
 		"react-player": "^2.16.0"
 	}
 }
