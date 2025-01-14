@@ -10,6 +10,12 @@
     exercises_generate_ai,
     common_error_generic
   } from '$lib/paraglide/messages';
+  import { Alert, AlertDescription } from '$lib/components/ui/alert';
+  import AlertCircle from 'lucide-svelte/icons/alert-circle';
+  import Brain from 'lucide-svelte/icons/brain';
+  import Plus from 'lucide-svelte/icons/plus';
+  import { cn } from '$lib/utils';
+  import { buttonVariants } from '$lib/components/ui/button/button.svelte';
 
   let exercises: Exercise[] = [];
   let loading = false;
@@ -50,71 +56,65 @@
   }
 </script>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-  <div class="py-10">
-    <header class="flex justify-between items-center">
-      <h1 class="text-3xl font-bold leading-tight text-gray-900">
-        {exercises_title()}
-      </h1>
-      <div class="flex space-x-3">
-        <button
-          class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-          on:click={() => {
-            editingExercise = null;
-            showForm = true;
-            showAIForm = true;
-          }}
-        >
-          {exercises_generate_ai()}
-        </button>
-        <button
-          class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-          on:click={() => {
-            editingExercise = null;
-            showForm = true;
-            showAIForm = false;
-          }}
-        >
-          {exercises_add()}
-        </button>
-      </div>
-    </header>
-
-    {#if error}
-      <div class="mt-6 rounded-md bg-red-50 p-4">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-          </div>
-          <div class="ml-3">
-            <p class="text-sm font-medium text-red-800">{error}</p>
-          </div>
-        </div>
-      </div>
-    {/if}
-
-    <div class="mt-6">
-      {#if showForm}
-        <ExerciseForm
-          exercise={editingExercise}
-          showAIForm={showAIForm}
-          on:exerciseCreated={handleExerciseCreated}
-          on:cancel={() => {
-            showForm = false;
-            showAIForm = false;
-            editingExercise = null;
-          }}
-        />
-      {:else}
-        <ExerciseList
-          {exercises}
-          {loading}
-          on:edit={e => startEditing(e.detail)}
-          on:delete={handleExerciseDeleted}
-        />
-      {/if}
+<div class="container space-y-6 p-8 pt-6">
+  <header class="flex justify-between items-center">
+    <h1 class="text-3xl font-bold tracking-tight">
+      {exercises_title()}
+    </h1>
+    <div class="flex gap-4">
+      <button
+        type="button"
+        class={cn(buttonVariants({ variant: "default" }))}
+        on:click={() => {
+          editingExercise = null;
+          showForm = true;
+          showAIForm = true;
+        }}
+      >
+        <Brain class="h-4 w-4 mr-2" />
+        {exercises_generate_ai()}
+      </button>
+      <!-- <button
+        type="button"
+        class={cn(buttonVariants({ variant: "default" }))}
+        on:click={() => {
+          editingExercise = null;
+          showForm = true;
+          showAIForm = false;
+        }}
+      >
+        <Plus class="h-4 w-4 mr-2" />
+        {exercises_add()}
+      </button> -->
     </div>
+  </header>
+
+  {#if error}
+    <Alert variant="destructive">
+      <AlertCircle class="h-4 w-4" />
+      <AlertDescription>{error}</AlertDescription>
+    </Alert>
+  {/if}
+
+  <div class="mt-6">
+    {#if showForm}
+      <ExerciseForm
+        exercise={editingExercise}
+        showAIForm={showAIForm}
+        on:exerciseCreated={handleExerciseCreated}
+        on:cancel={() => {
+          showForm = false;
+          showAIForm = false;
+          editingExercise = null;
+        }}
+      />
+    {:else}
+      <ExerciseList
+        {exercises}
+        {loading}
+        on:edit={e => startEditing(e.detail)}
+        on:delete={handleExerciseDeleted}
+      />
+    {/if}
   </div>
 </div> 

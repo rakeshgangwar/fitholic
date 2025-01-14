@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.12] - 2024-01-14
+
+### Changed
+- Updated ExerciseView component to use native HTML buttons with shadcn classes
+  - Replaced Button component with HTML button elements
+  - Applied shadcn button variants through buttonVariants utility
+  - Maintained consistent styling and functionality
+  - Improved component performance by reducing component overhead
+
 ## [2.0.11] - 2024-01-14
 
 ### Changed

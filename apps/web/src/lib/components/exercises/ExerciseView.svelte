@@ -12,10 +12,10 @@
 	} from '$lib/paraglide/messages';
 	import { Pencil, Trash2 } from 'lucide-svelte';
 	import * as Card from '$lib/components/ui/card';
-	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Separator } from '$lib/components/ui/separator';
 	import { cn } from '$lib/utils';
+	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import { marked } from 'marked';
 
 	export let exercise: Exercise;
@@ -61,14 +61,22 @@
 				{/if}
 			</div>
 			<div class="flex space-x-3">
-				<Button variant="outline" size="sm" on:click={onEdit}>
+				<button
+					type="button"
+					class={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+					on:click={onEdit}
+				>
 					<Pencil class="mr-1.5 h-4 w-4" />
 					{exercises_edit()}
-				</Button>
-				<Button variant="destructive" size="sm" on:click={onDelete}>
+				</button>
+				<button
+					type="button"
+					class={cn(buttonVariants({ variant: 'destructive', size: 'sm' }))}
+					on:click={onDelete}
+				>
 					<Trash2 class="mr-1.5 h-4 w-4" />
 					{exercises_delete()}
-				</Button>
+				</button>
 			</div>
 		</div>
 	</Card.Header>
