@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
+    ELEVENLABS_API_KEY: str = ""
 
     DEBUG: bool = True
     

@@ -4,6 +4,7 @@
   import WorkoutLogger from '$lib/components/workouts/WorkoutLogger.svelte';
   import WorkoutSummary from '$lib/components/workouts/WorkoutSummary.svelte';
   import WorkoutGenerator from '$lib/components/workouts/WorkoutGenerator.svelte';
+  import VoiceWorkoutLogger from '$lib/components/workouts/VoiceWorkoutLogger.svelte';
   import type { WorkoutTemplate } from '$lib/types';
   import { api } from '$lib/api';
   import { Tabs, TabsList, TabsTrigger, TabsContent } from "$lib/components/ui/tabs";
@@ -87,7 +88,7 @@
   </header>
 
   {#if error}
-    <Alert variant="destructive">
+    <Alert variant="destructive" class="mb-6">
       <AlertDescription>{error}</AlertDescription>
     </Alert>
   {/if}
@@ -102,7 +103,7 @@
   {:else}
     <div class="bg-card text-card-foreground rounded-lg shadow">
       <Tabs value={activeTab} onValueChange={(value: string) => activeTab = value} class="w-full">
-        <TabsList class="grid w-full grid-cols-3">
+        <TabsList class="grid w-full grid-cols-4">
           <TabsTrigger value="sessions" class="flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
@@ -114,6 +115,12 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
             </svg>
             Log Workout
+          </TabsTrigger>
+          <TabsTrigger value="voice" class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            Voice Assistant
           </TabsTrigger>
           <TabsTrigger value="history" class="flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,6 +142,13 @@
 
         <TabsContent value="log" class="p-6">
           <WorkoutLogger
+            template={selectedSession}
+            on:logSuccess={handleLogSuccess}
+          />
+        </TabsContent>
+
+        <TabsContent value="voice" class="p-6">
+          <VoiceWorkoutLogger
             template={selectedSession}
             on:logSuccess={handleLogSuccess}
           />
