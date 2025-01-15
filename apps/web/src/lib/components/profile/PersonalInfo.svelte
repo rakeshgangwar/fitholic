@@ -9,7 +9,8 @@
     import { Button } from '$lib/components/ui/button';
     import { Checkbox } from '$lib/components/ui/checkbox';
     import { toast } from 'svelte-sonner';
-    import { Select, SelectTrigger, SelectContent, SelectItem } from '$lib/components/ui/select';
+    import * as Select from '$lib/components/ui/select';
+    import * as RadioGroup from '$lib/components/ui/radio-group';
     import { Alert, AlertTitle, AlertDescription } from '$lib/components/ui/alert';
     import { Calendar } from '$lib/components/ui/calendar';
     import * as Popover from '$lib/components/ui/popover';
@@ -162,17 +163,17 @@
 
             <!-- Gender -->
             <div class="space-y-2">
-                <Label for="gender">Gender</Label>
-                <Select bind:value={formData.gender}>
-                    <SelectTrigger class="w-full">
-                        <span class="text-muted-foreground">{formData.gender || 'Choose option...'}</span>
-                    </SelectTrigger>
-                    <SelectContent>
-                        {#each genderOptions as option}
-                            <SelectItem value={option.value}>{option.label}</SelectItem>
-                        {/each}
-                    </SelectContent>
-                </Select>
+                <Label>Gender</Label>
+                <RadioGroup.Root value={formData.gender} onValueChange={(value) => formData.gender = value} class="grid grid-cols-2 gap-4">
+                    {#each genderOptions as option}
+                        <div class="flex items-center space-x-2">
+                            <RadioGroup.Item value={option.value} id={option.value}>
+                                <RadioGroup.Indicator />
+                            </RadioGroup.Item>
+                            <Label for={option.value} class="cursor-pointer">{option.label}</Label>
+                        </div>
+                    {/each}
+                </RadioGroup.Root>
             </div>
         </div>
     </div>

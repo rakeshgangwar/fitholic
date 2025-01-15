@@ -7,6 +7,7 @@
   import * as Card from '$lib/components/ui/card';
   import { Button } from '$lib/components/ui/button';
   import { cn } from '$lib/utils';
+  import TodaysWorkouts from '$lib/components/workouts/TodaysWorkouts.svelte';
 
   let loading = {
     workouts: false,
@@ -113,7 +114,10 @@
   <main>
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
       <div class="px-4 py-8 sm:px-0">
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+          <!-- Todays Workouts Card -->
+          <TodaysWorkouts />
 
           <!-- Next Workout Card -->
           <Card.Root>

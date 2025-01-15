@@ -13,7 +13,7 @@
   import VoiceControls from './VoiceControls.svelte';
 
   const dispatch = createEventDispatcher<{
-    logSuccess: void;
+    logSuccess: WorkoutLog;
   }>();
 
   export let template: WorkoutTemplate | null = null;
@@ -230,8 +230,8 @@
         }))
       };
 
-      await api.put(`/workouts/logs/${currentLogId}`, logData);
-      dispatch('logSuccess');
+      const response = await api.put(`/workouts/logs/${currentLogId}`, logData);
+      dispatch('logSuccess', response.data);
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to complete workout';
     } finally {
