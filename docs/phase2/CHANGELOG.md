@@ -12,12 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New fields in WorkoutLog model: `start_time`, `end_time`, and `status`
   - Migration to handle existing workout logs
   - Enhanced validation for workout completion status
+- Added voice command support for workout logging:
+  - Speech-to-text for voice input processing
+  - Text-to-speech for system responses
+  - LangGraph-based command processing system
+  - Voice commands for logging sets and navigating exercises
 
 ### Changed
 - Updated workout logger validation:
   - Modified reps validation to only apply to completed sets
   - Improved exercise completion status handling
   - Enhanced workout completion logic in frontend
+- Enhanced voice interaction system:
+  - Integrated GPT-4 for natural language understanding
+  - Added context-aware command processing
+  - Improved error handling in voice processing pipeline
 
 ### Fixed
 - Fixed JSON serialization in workout log updates
