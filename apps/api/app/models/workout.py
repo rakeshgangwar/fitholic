@@ -29,12 +29,15 @@ class WorkoutLog(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     template_id = Column(UUID(as_uuid=True), ForeignKey("workout_templates.template_id"), nullable=True)
     date = Column(Date, nullable=False)
+    start_time = Column(DateTime(timezone=True), nullable=False)
+    end_time = Column(DateTime(timezone=True), nullable=True)
+    status = Column(String, nullable=False, default="ongoing")  # "ongoing" or "completed"
     duration = Column(Integer, nullable=True)  # in minutes
     notes = Column(String, nullable=True)
-    exercises = Column(JSON, nullable=False)  # Will store array of {exerciseId, sets: [{reps, weight, completed}]}
+    exercises = Column(JSON, nullable=False)  # Will store array of {exerciseId, sets: [{reps, weight, completed}], completed}
     created_at = Column(DateTime(timezone=True), server_default='now()')
     updated_at = Column(DateTime(timezone=True), server_default='now()', onupdate='now()')
 
     # Relationships
     user = relationship("User", back_populates="workout_logs")
-    template = relationship("WorkoutTemplate", back_populates="workout_logs") 
+    template = relationship("WorkoutTemplate", back_populates="workout_logs")

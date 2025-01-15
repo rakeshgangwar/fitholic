@@ -157,17 +157,67 @@ def delete_workout_template(
     workout_templates.remove(db, id=template_id)
 
 # Workout Log endpoints
-@router.get("/logs/", response_model=List[WorkoutLog])
-def list_workout_logs(
+@router.post("/logs", response_model=WorkoutLog)
+def create_workout_log(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    workout_log: WorkoutLogCreate
+) -> WorkoutLog:
+    """
+    Create new workout log.
+    """
+    # Validate template if provided
+    if workout_log.template_id:
+        template = workout_templates.get(db=db, id=workout_log.template_id)
+        if not template:
+            raise HTTPException(
+                status_code=404,
+                detail="Workout template not found"
+            )
+
+    return workout_logs.create_with_user(
+        db=db, 
+        obj_in=workout_log, 
+        user_id=current_user.id
+    )
+
+@router.put("/logs/{log_id}", response_model=WorkoutLog)
+def update_workout_log(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    log_id: UUID,
+    workout_log: WorkoutLogUpdate,
+) -> WorkoutLog:
+    """
+    Update workout log.
+    """
+    current_log = workout_logs.get(db=db, id=log_id)
+    if not current_log:
+        raise HTTPException(status_code=404, detail="Workout log not found")
+    if current_log.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+
+    return workout_logs.update(
+        db=db,
+        db_obj=current_log,
+        obj_in=workout_log
+    )
+
+@router.get("/logs", response_model=List[WorkoutLog])
+def get_workout_logs(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    status: Optional[str] = None,
 ) -> List[WorkoutLog]:
     """
-    Retrieve workout logs for the current user.
+    Get workout logs for current user.
     """
     if start_date and end_date and start_date > end_date:
         raise HTTPException(
@@ -175,64 +225,18 @@ def list_workout_logs(
             detail="Start date cannot be after end date"
         )
     
+    query_filters = {}
     if start_date and end_date:
-        return workout_logs.get_user_logs_by_date_range(
-            db,
-            user_id=current_user.id,
-            start_date=start_date,
-            end_date=end_date
-        )
-    return workout_logs.get_by_user(
-        db, user_id=current_user.id, skip=skip, limit=limit
-    )
+        query_filters["date_range"] = (start_date, end_date)
+    if status:
+        query_filters["status"] = status
 
-@router.post("/logs/", response_model=WorkoutLog, status_code=201)
-def create_workout_log(
-    *,
-    db: Session = Depends(get_db),
-    log_in: WorkoutLogCreate,
-    current_user: User = Depends(get_current_user)
-) -> WorkoutLog:
-    """
-    Create new workout log.
-    """
-    # Validate template if provided
-    if log_in.template_id:
-        template = workout_templates.get(db, id=log_in.template_id)
-        if not template:
-            raise HTTPException(
-                status_code=404,
-                detail="Workout template not found"
-            )
-        if template.created_by != current_user.id:
-            raise HTTPException(
-                status_code=403,
-                detail="Not enough permissions to use this template"
-            )
-    
-    # Validate all exercise IDs
-    for exercise in log_in.exercises:
-        if not exercises.get(db, id=exercise.exercise_id):
-            raise HTTPException(
-                status_code=404,
-                detail=f"Exercise with ID {exercise.exercise_id} not found"
-            )
-        
-        # Validate sets data
-        for set_data in exercise.sets:
-            if set_data.reps < 1:
-                raise HTTPException(
-                    status_code=422,
-                    detail="Number of reps must be greater than 0"
-                )
-            if set_data.weight is not None and set_data.weight <= 0:
-                raise HTTPException(
-                    status_code=422,
-                    detail="Weight must be greater than 0"
-                )
-    
-    return workout_logs.create_with_user(
-        db, obj_in=log_in, user_id=current_user.id
+    return workout_logs.get_by_user(
+        db=db,
+        user_id=current_user.id,
+        skip=skip,
+        limit=limit,
+        **query_filters
     )
 
 @router.get("/logs/{log_id}", response_model=WorkoutLog)
@@ -256,67 +260,6 @@ def get_workout_log(
             detail="Not enough permissions"
         )
     return log
-
-@router.put("/logs/{log_id}", response_model=WorkoutLog)
-def update_workout_log(
-    *,
-    db: Session = Depends(get_db),
-    log_id: UUID,
-    log_in: WorkoutLogUpdate,
-    current_user: User = Depends(get_current_user)
-) -> WorkoutLog:
-    """
-    Update workout log.
-    """
-    log = workout_logs.get(db, id=log_id)
-    if not log:
-        raise HTTPException(
-            status_code=404,
-            detail="Workout log not found"
-        )
-    if log.user_id != current_user.id:
-        raise HTTPException(
-            status_code=403,
-            detail="Not enough permissions"
-        )
-    
-    # Validate template if provided
-    if log_in.template_id:
-        template = workout_templates.get(db, id=log_in.template_id)
-        if not template:
-            raise HTTPException(
-                status_code=404,
-                detail="Workout template not found"
-            )
-        if template.created_by != current_user.id:
-            raise HTTPException(
-                status_code=403,
-                detail="Not enough permissions to use this template"
-            )
-    
-    # Validate exercises if provided
-    if log_in.exercises:
-        for exercise in log_in.exercises:
-            if not exercises.get(db, id=exercise.exercise_id):
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Exercise with ID {exercise.exercise_id} not found"
-                )
-            
-            # Validate sets data
-            for set_data in exercise.sets:
-                if set_data.reps < 1:
-                    raise HTTPException(
-                        status_code=422,
-                        detail="Number of reps must be greater than 0"
-                    )
-                if set_data.weight is not None and set_data.weight <= 0:
-                    raise HTTPException(
-                        status_code=422,
-                        detail="Weight must be greater than 0"
-                    )
-    
-    return workout_logs.update(db, db_obj=log, obj_in=log_in)
 
 @router.delete("/logs/{log_id}", status_code=204)
 def delete_workout_log(

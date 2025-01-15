@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union, Dict, Any
 from uuid import UUID
 from sqlalchemy.orm import Session
 from datetime import date, timedelta
@@ -46,16 +46,22 @@ class CRUDWorkoutTemplate(CRUDBase[WorkoutTemplate, WorkoutTemplateCreate, Worko
 
 class CRUDWorkoutLog(CRUDBase[WorkoutLog, WorkoutLogCreate, WorkoutLogUpdate]):
     def get_by_user(
-        self, db: Session, *, user_id: UUID, skip: int = 0, limit: int = 100
+        self, db: Session, *, user_id: UUID, skip: int = 0, limit: int = 100,
+        date_range: Optional[tuple[date, date]] = None, status: Optional[str] = None
     ) -> List[WorkoutLog]:
-        return (
-            db.query(self.model)
-            .filter(self.model.user_id == user_id)
-            .order_by(self.model.date.desc())
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+        query = db.query(self.model).filter(self.model.user_id == user_id)
+        
+        if date_range:
+            start_date, end_date = date_range
+            query = query.filter(
+                self.model.date >= start_date,
+                self.model.date <= end_date
+            )
+        
+        if status:
+            query = query.filter(self.model.status == status)
+        
+        return query.order_by(self.model.date.desc()).offset(skip).limit(limit).all()
 
     def get_user_logs_by_date_range(
         self, db: Session, *, user_id: UUID, start_date: date, end_date: date
@@ -84,6 +90,31 @@ class CRUDWorkoutLog(CRUDBase[WorkoutLog, WorkoutLogCreate, WorkoutLogUpdate]):
             exercises=exercises_data,
             user_id=user_id
         )
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+    def update(
+        self,
+        db: Session,
+        *,
+        db_obj: WorkoutLog,
+        obj_in: Union[WorkoutLogUpdate, Dict[str, Any]]
+    ) -> WorkoutLog:
+        update_data = obj_in.model_dump(exclude_unset=True) if not isinstance(obj_in, dict) else obj_in
+        
+        # Handle exercises field separately
+        if "exercises" in update_data:
+            exercises_data = json.loads(
+                json.dumps(update_data["exercises"], cls=UUIDEncoder)
+            )
+            update_data["exercises"] = exercises_data
+
+        # Update other fields
+        for field, value in update_data.items():
+            setattr(db_obj, field, value)
+
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

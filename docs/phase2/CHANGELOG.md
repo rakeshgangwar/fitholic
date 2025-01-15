@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.14] - 2025-01-15
+
+### Added
+- Added workout session status tracking:
+  - New fields in WorkoutLog model: `start_time`, `end_time`, and `status`
+  - Migration to handle existing workout logs
+  - Enhanced validation for workout completion status
+
+### Changed
+- Updated workout logger validation:
+  - Modified reps validation to only apply to completed sets
+  - Improved exercise completion status handling
+  - Enhanced workout completion logic in frontend
+
+### Fixed
+- Fixed JSON serialization in workout log updates
+- Fixed exercise skipping functionality
+- Fixed complete session button visibility
+- Fixed validation issues with ongoing workout sets
+
 ## [2.0.13] - 2024-01-15
 
 ### Changed

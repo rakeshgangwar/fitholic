@@ -4,6 +4,7 @@ from langgraph.prebuilt import ToolExecutor, ToolInvocation
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from app.core.config import settings
+from datetime import datetime, date
 
 class CommandProcessor:
     """Process voice commands using LangGraph"""
@@ -45,17 +46,33 @@ class CommandProcessor:
                 "type": "function",
                 "function": {
                     "name": "navigate_exercise",
-                    "description": "Navigate to next or previous exercise",
+                    "description": "Navigate to next or previous exercise, or skip current exercise",
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "direction": {
+                            "action": {
                                 "type": "string",
-                                "enum": ["next", "previous"],
-                                "description": "Direction to navigate"
+                                "enum": ["next", "previous", "skip"],
+                                "description": "Navigation action to take"
                             }
                         },
-                        "required": ["direction"]
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "complete_session",
+                    "description": "Complete the current workout session",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "notes": {
+                                "type": "string",
+                                "description": "Optional notes about the workout"
+                            }
+                        }
                     }
                 }
             },
@@ -73,6 +90,17 @@ class CommandProcessor:
                             }
                         },
                         "required": ["duration"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_exercise_info",
+                    "description": "Get information about current exercise progress",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {}
                     }
                 }
             }
@@ -107,8 +135,10 @@ class CommandProcessor:
                 
                 Available commands:
                 1. Log a set: "logged X reps at Y pounds"
-                2. Navigate: "next exercise" or "previous exercise"
+                2. Navigate: "next exercise", "previous exercise", "skip this exercise"
                 3. Rest timer: "start rest timer for X seconds"
+                4. Complete workout: "finish workout", "end session"
+                5. Exercise info: "how many sets left", "show progress"
                 
                 Return the appropriate function call.
             """)
@@ -134,8 +164,10 @@ class CommandProcessor:
         """Execute the parsed command"""
         command = state["command"]
         
-        # Here we would actually execute the command
-        # For now, we'll just pass it through
+        # Add current date to complete_session command
+        if command["type"] == "complete_session":
+            command["parameters"]["date"] = date.today().isoformat()
+        
         state["execution_result"] = {
             "success": True,
             "command": command
