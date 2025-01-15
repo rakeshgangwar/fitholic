@@ -1,9 +1,17 @@
 import { api } from '$lib/api';
 
+export type VoiceCommandCallback = (command: {
+  transcription: string;
+  type: string;
+  parameters: any;
+  response: string;
+}) => void;
+
 export class WorkoutVoiceService {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private isListening = false;
+  private commandCallback: VoiceCommandCallback | null = null;
 
   constructor() {
     this.setupAudioContext();
@@ -35,6 +43,10 @@ export class WorkoutVoiceService {
       console.error('Failed to initialize audio:', error);
       throw new Error('Microphone access required for voice commands');
     }
+  }
+
+  setCommandCallback(callback: VoiceCommandCallback) {
+    this.commandCallback = callback;
   }
 
   async startListening(): Promise<void> {
@@ -74,7 +86,7 @@ export class WorkoutVoiceService {
       });
 
       // Handle the response
-      const { transcription, response_text, response_audio } = response.data;
+      const { transcription, command_type, command_parameters, response_text, response_audio } = response.data;
 
       // Play audio response if available
       if (response_audio) {
@@ -86,10 +98,15 @@ export class WorkoutVoiceService {
         source.start();
       }
 
-      return {
-        transcription,
-        response: response_text,
-      };
+      // Call the callback if set
+      if (this.commandCallback) {
+        this.commandCallback({
+          transcription,
+          type: command_type,
+          parameters: command_parameters,
+          response: response_text
+        });
+      }
     } catch (error) {
       console.error('Failed to process voice command:', error);
       throw error;
@@ -103,8 +120,7 @@ export class WorkoutVoiceService {
     for (let i = 0; i < len; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    const audioData = await context.decodeAudioData(bytes.buffer);
-    return audioData;
+    return context.decodeAudioData(bytes.buffer);
   }
 
   isRecording(): boolean {

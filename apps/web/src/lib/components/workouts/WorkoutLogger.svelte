@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { createEventDispatcher } from 'svelte';
   import type { WorkoutTemplate, Exercise, WorkoutLog } from '$lib/types';
   import { api } from '$lib/api';
@@ -9,6 +9,8 @@
   import { Alert, AlertDescription } from "$lib/components/ui/alert";
   import { Textarea } from "$lib/components/ui/textarea";
   import { Progress } from "$lib/components/ui/progress";
+  import { WorkoutVoiceService } from '$lib/services/voice';
+  import VoiceControls from './VoiceControls.svelte';
 
   const dispatch = createEventDispatcher<{
     logSuccess: void;
@@ -26,6 +28,109 @@
   let commonWeights = [0, 2.5, 5, 7.5, 10, 12.5, 15, 20, 25, 30, 35, 40, 45, 50];
   let commonReps = [5, 8, 10, 12, 15, 20];
   let currentLogId: string | null = null;
+
+  // Voice assistant state
+  let voiceService: WorkoutVoiceService;
+  let isListening = false;
+  let voiceError: string | null = null;
+  let lastCommand = '';
+  let assistantResponse = '';
+  let isResting = false;
+  let restTimeRemaining = 0;
+  let restTimer: number;
+
+  onMount(() => {
+    loadExercises();
+    initializeVoiceService();
+  });
+
+  onDestroy(() => {
+    if (restTimer) {
+      clearInterval(restTimer);
+    }
+  });
+
+  async function initializeVoiceService() {
+    try {
+      voiceService = new WorkoutVoiceService();
+      voiceService.setCommandCallback(handleVoiceCommand);
+    } catch (e) {
+      voiceError = 'Failed to initialize voice assistant';
+      console.error(e);
+    }
+  }
+
+  function handleStartListening() {
+    try {
+      voiceService.startListening();
+      isListening = true;
+      voiceError = null;
+    } catch (e) {
+      voiceError = 'Failed to start listening';
+      console.error(e);
+    }
+  }
+
+  function handleStopListening() {
+    try {
+      voiceService.stopListening();
+      isListening = false;
+    } catch (e) {
+      voiceError = 'Failed to stop listening';
+      console.error(e);
+    }
+  }
+
+  function startRestTimer(duration: number) {
+    isResting = true;
+    restTimeRemaining = duration;
+    
+    if (restTimer) {
+      clearInterval(restTimer);
+    }
+    
+    restTimer = setInterval(() => {
+      if (restTimeRemaining > 0) {
+        restTimeRemaining--;
+      } else {
+        clearInterval(restTimer);
+        isResting = false;
+      }
+    }, 1000);
+  }
+
+  async function handleVoiceCommand(command: any) {
+    lastCommand = command.transcription;
+    
+    if (command.type === 'log_set') {
+      const exercise = template?.exercises[currentExerciseIndex];
+      if (exercise) {
+        const setIndex = exerciseData[exercise.exercise_id].sets.findIndex(s => !s.completed);
+        if (setIndex !== -1) {
+          updateSet(exercise.exercise_id, setIndex, 'reps', command.parameters.reps);
+          updateSet(exercise.exercise_id, setIndex, 'weight', command.parameters.weight);
+          updateSet(exercise.exercise_id, setIndex, 'completed', true);
+        }
+      }
+    } else if (command.type === 'navigate_exercise') {
+      if (command.parameters.action === 'next') {
+        nextExercise();
+      } else if (command.parameters.action === 'previous') {
+        previousExercise();
+      } else if (command.parameters.action === 'skip') {
+        skipExercise();
+      }
+    } else if (command.type === 'complete_session') {
+      if (command.parameters.notes) {
+        notes = command.parameters.notes;
+      }
+      await completeWorkout();
+    } else if (command.type === 'start_rest_timer') {
+      startRestTimer(command.parameters.duration);
+    }
+    
+    assistantResponse = command.response;
+  }
 
   async function loadExercises() {
     if (!template) return;
@@ -71,10 +176,6 @@
     } catch (err) {
       error = 'Failed to load exercises';
     }
-  }
-
-  $: if (template) {
-    loadExercises();
   }
 
   async function createOrUpdateLog() {
@@ -198,16 +299,27 @@
           completed: true  // Mark as completed when skipped
         }
       };
-      createOrUpdateLog();
       nextExercise();
     }
   }
 
-  function getExerciseStatus(exerciseId: string): 'completed' | 'skipped' | 'pending' {
-    const data = exerciseData[exerciseId];
-    if (!data) return 'pending';
-    if (data.completed) return data.sets.length === 0 ? 'skipped' : 'completed';
-    return 'pending';
+  $: progress = template ? ((currentExerciseIndex + 1) / template.exercises.length) * 100 : 0;
+
+  // Initialize exercise data when template changes
+  $: if (template) {
+    loadExercises();
+  }
+
+  // Initialize exercise data for current exercise if not exists
+  $: if (template?.exercises[currentExerciseIndex] && !exerciseData[template.exercises[currentExerciseIndex].exercise_id]) {
+    const exercise = template.exercises[currentExerciseIndex];
+    exerciseData = {
+      ...exerciseData,
+      [exercise.exercise_id]: {
+        sets: Array(exercise.sets).fill({ weight: 0, reps: 0, completed: false }),
+        completed: false
+      }
+    };
   }
 </script>
 
@@ -216,10 +328,12 @@
     <Card class="text-center py-12">
       <CardContent class="flex flex-col items-center justify-center">
         <svg class="h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
-        <h3 class="mt-2 text-sm font-medium">No session selected</h3>
-        <p class="mt-1 text-sm text-muted-foreground">Please select a workout session to start logging.</p>
+        <h3 class="mt-4 text-lg font-semibold">No Workout Selected</h3>
+        <p class="mt-2 text-sm text-muted-foreground">
+          Please select a workout template to begin logging your exercises.
+        </p>
       </CardContent>
     </Card>
   {:else}
@@ -228,255 +342,224 @@
         <div class="flex justify-between items-start">
           <div>
             <CardTitle>{template.name}</CardTitle>
-            {#if template.description}
-              <p class="mt-1 text-sm text-muted-foreground">{template.description}</p>
-            {/if}
+            <div class="text-sm text-muted-foreground mt-1">
+              Exercise {currentExerciseIndex + 1} of {template.exercises.length}
+            </div>
           </div>
           {#if !startTime}
-            <button 
-              class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+            <button
+              class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
               on:click={handleStart}
             >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              Start Session
+              Start Workout
             </button>
           {/if}
         </div>
-
-        {#if error}
-          <Alert variant="destructive" class="mt-4">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        {/if}
       </CardHeader>
+
+      {#if error || voiceError}
+        <div class="px-6">
+          <Alert variant="destructive">
+            <AlertDescription>{error || voiceError}</AlertDescription>
+          </Alert>
+        </div>
+      {/if}
 
       {#if startTime}
         <CardContent class="space-y-6">
+          <!-- Progress Bar -->
           <div class="space-y-2">
             <div class="flex items-center justify-between text-sm text-muted-foreground">
               <span>Exercise {currentExerciseIndex + 1} of {template.exercises.length}</span>
-              <span>{Math.round(((currentExerciseIndex + 1) / template.exercises.length) * 100)}%</span>
+              <span>{Math.round(progress)}%</span>
             </div>
-            <Progress value={((currentExerciseIndex + 1) / template.exercises.length) * 100} />
+            <Progress value={progress} />
           </div>
 
-          <div class="grid grid-cols-3 gap-4 mt-4">
-            {#each ['completed', 'skipped', 'pending'] as status}
-              <div class="text-center p-4 bg-card rounded-lg border">
-                <div class="text-2xl font-bold">
-                  {template.exercises.filter(ex => getExerciseStatus(ex.exercise_id) === status).length}
-                </div>
-                <div class="text-sm text-muted-foreground capitalize">{status}</div>
+          <!-- Voice Controls -->
+          <div class="border rounded-lg p-4 space-y-4">
+            <VoiceControls
+              {isListening}
+              error={voiceError}
+              on:startListening={handleStartListening}
+              on:stopListening={handleStopListening}
+            />
+            
+            {#if lastCommand || assistantResponse}
+              <div class="space-y-2 p-4 bg-muted rounded-lg">
+                {#if lastCommand}
+                  <div class="text-sm">
+                    <span class="font-semibold">You:</span> {lastCommand}
+                  </div>
+                {/if}
+                {#if assistantResponse}
+                  <div class="text-sm">
+                    <span class="font-semibold">Assistant:</span> {assistantResponse}
+                  </div>
+                {/if}
               </div>
-            {/each}
+            {/if}
+
+            {#if isResting}
+              <div class="flex justify-center">
+                <div class="text-lg font-semibold text-primary">
+                  Rest Timer: {restTimeRemaining}s
+                </div>
+              </div>
+            {/if}
           </div>
 
           {#if template.exercises[currentExerciseIndex]}
             {@const exercise = template.exercises[currentExerciseIndex]}
-            <div class="space-y-4">
-              <div class="flex justify-between items-center">
-                <div>
-                  <h3 class="text-lg font-medium">
-                    {exercises[exercise.exercise_id]?.name || `Exercise ${currentExerciseIndex + 1}`}
-                  </h3>
-                  <p class="text-sm text-muted-foreground">
-                    Status: <span class="capitalize">{getExerciseStatus(exercise.exercise_id)}</span>
-                  </p>
-                </div>
-                <div class="flex space-x-2">
-                  <button 
-                    type="button"
-                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                    on:click={previousExercise} 
-                    disabled={currentExerciseIndex === 0}
-                  >
-                    Previous
-                  </button>
-                  <button 
-                    type="button"
-                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                    on:click={skipExercise}
-                  >
-                    Skip
-                  </button>
-                  <button 
-                    type="button"
-                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                    on:click={nextExercise} 
-                    disabled={currentExerciseIndex === template.exercises.length - 1}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-
-              <!-- Exercise Sets -->
-              <Card>
-                <CardContent class="pt-6">
-                  <div class="space-y-6">
-                    <!-- Set Management -->
-                    <div class="flex justify-between items-center">
-                      <h4 class="text-sm font-medium">Sets ({exerciseData[exercise.exercise_id].sets.length})</h4>
-                      <div class="flex space-x-2">
-                        <button
-                          type="button"
-                          class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 h-8 px-3"
-                          on:click={() => addSet(exercise.exercise_id)}
-                        >
-                          Add Set
-                        </button>
-                      </div>
-                    </div>
-
-                    {#each exerciseData[exercise.exercise_id].sets as set, setIndex}
-                      <div class="space-y-4 border rounded-lg p-4 relative">
-                        <!-- Set Header -->
-                        <div class="flex justify-between items-center">
-                          <h4 class="text-sm font-medium">Set {setIndex + 1}</h4>
-                          <div class="flex items-center space-x-2">
-                            <button
-                              type="button"
-                              class="inline-flex items-center justify-center rounded-full w-6 h-6 {set.completed ? 'bg-green-500 text-white' : 'bg-gray-200'}"
-                              on:click={() => updateSet(exercise.exercise_id, setIndex, 'completed', !set.completed)}
-                            >
-                              {#if set.completed}
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                              {/if}
-                            </button>
-                            {#if exerciseData[exercise.exercise_id].sets.length > 1}
-                              <button
-                                type="button"
-                                class="text-destructive hover:text-destructive/80"
-                                on:click={() => removeSet(exercise.exercise_id, setIndex)}
-                              >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                              </button>
-                            {/if}
-                          </div>
-                        </div>
-
-                        <!-- Weight Selection -->
-                        <div class="space-y-2">
-                          <Label>Weight (kg)</Label>
-                          <div class="flex flex-wrap gap-2">
-                            {#each commonWeights as weight}
-                              <button
-                                type="button"
-                                class="inline-flex items-center justify-center px-3 py-1 rounded-md text-sm
-                                  {set.weight === weight ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}"
-                                on:click={() => updateSet(exercise.exercise_id, setIndex, 'weight', weight)}
-                              >
-                                {weight}
-                              </button>
-                            {/each}
-                            <button
-                              type="button"
-                              class="inline-flex items-center justify-center px-3 py-1 rounded-md text-sm bg-secondary text-secondary-foreground"
-                              on:click={() => {
-                                const weight = prompt('Enter custom weight in kg:');
-                                if (weight && !isNaN(parseFloat(weight)) && parseFloat(weight) >= 0) {
-                                  updateSet(exercise.exercise_id, setIndex, 'weight', parseFloat(weight));
-                                }
-                              }}
-                            >
-                              Custom
-                            </button>
-                          </div>
-                          {#if set.weight > 0}
-                            <p class="text-sm text-muted-foreground">Selected: {set.weight}kg</p>
-                          {:else}
-                            <p class="text-sm text-muted-foreground">Bodyweight</p>
-                          {/if}
-                        </div>
-
-                        <!-- Reps Selection -->
-                        <div class="space-y-2">
-                          <Label>Reps</Label>
-                          <div class="flex flex-wrap gap-2">
-                            {#each commonReps as reps}
-                              <button
-                                type="button"
-                                class="inline-flex items-center justify-center px-3 py-1 rounded-md text-sm
-                                  {set.reps === reps ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}"
-                                on:click={() => updateSet(exercise.exercise_id, setIndex, 'reps', reps)}
-                              >
-                                {reps}
-                              </button>
-                            {/each}
-                            <button
-                              type="button"
-                              class="inline-flex items-center justify-center px-3 py-1 rounded-md text-sm bg-secondary text-secondary-foreground"
-                              on:click={() => {
-                                const reps = prompt('Enter custom reps:');
-                                if (reps && !isNaN(parseInt(reps)) && parseInt(reps) > 0) {
-                                  updateSet(exercise.exercise_id, setIndex, 'reps', parseInt(reps));
-                                }
-                              }}
-                            >
-                              Custom
-                            </button>
-                          </div>
-                          {#if set.reps > 0}
-                            <p class="text-sm text-muted-foreground">Selected: {set.reps} reps</p>
-                          {/if}
-                        </div>
-                      </div>
-                    {/each}
+            {#if exerciseData[exercise.exercise_id]}
+              <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <h3 class="text-lg font-medium">
+                      {exercises[exercise.exercise_id]?.name || `Exercise ${currentExerciseIndex + 1}`}
+                    </h3>
+                    <p class="text-sm text-muted-foreground">
+                      Target: {exercise.sets} sets of {exercise.reps} reps
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                  <div class="flex space-x-2">
+                    <button
+                      class="px-3 py-1 text-sm rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                      on:click={previousExercise}
+                      disabled={currentExerciseIndex === 0}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      class="px-3 py-1 text-sm rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                      on:click={skipExercise}
+                    >
+                      Skip
+                    </button>
+                    <button
+                      class="px-3 py-1 text-sm rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                      on:click={nextExercise}
+                      disabled={currentExerciseIndex === template.exercises.length - 1}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+
+                <Card>
+                  <CardContent class="pt-6">
+                    <div class="space-y-6">
+                      <!-- Set Management -->
+                      <div class="flex justify-between items-center">
+                        <h4 class="text-sm font-medium">Sets ({exerciseData[exercise.exercise_id].sets.length})</h4>
+                      </div>
+
+                      {#each exerciseData[exercise.exercise_id].sets as set, setIndex}
+                        <div class="space-y-4 border rounded-lg p-4 relative">
+                          <!-- Set Header -->
+                          <div class="flex justify-between items-center">
+                            <h4 class="text-sm font-medium">Set {setIndex + 1}</h4>
+                            <div class="flex items-center space-x-2">
+                              <label class="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={set.completed}
+                                  on:change={(e) => updateSet(exercise.exercise_id, setIndex, 'completed', e.currentTarget.checked)}
+                                  class="rounded border-input"
+                                />
+                                <span class="text-sm">Complete</span>
+                              </label>
+                            </div>
+                          </div>
+
+                          <!-- Weight Input -->
+                          <div class="space-y-2">
+                            <Label>Weight (lbs)</Label>
+                            <div class="flex flex-wrap gap-2">
+                              {#each commonWeights as weight}
+                                <button
+                                  class="px-3 py-1 text-sm rounded-md {set.weight === weight ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/90'}"
+                                  on:click={() => updateSet(exercise.exercise_id, setIndex, 'weight', weight)}
+                                >
+                                  {weight}
+                                </button>
+                              {/each}
+                              <Input
+                                type="number"
+                                value={set.weight}
+                                on:input={(e) => updateSet(exercise.exercise_id, setIndex, 'weight', parseFloat(e.currentTarget.value) || 0)}
+                                class="w-20"
+                                min="0"
+                                step="0.5"
+                              />
+                            </div>
+                          </div>
+
+                          <!-- Reps Input -->
+                          <div class="space-y-2">
+                            <Label>Reps</Label>
+                            <div class="flex flex-wrap gap-2">
+                              {#each commonReps as reps}
+                                <button
+                                  class="px-3 py-1 text-sm rounded-md {set.reps === reps ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/90'}"
+                                  on:click={() => updateSet(exercise.exercise_id, setIndex, 'reps', reps)}
+                                >
+                                  {reps}
+                                </button>
+                              {/each}
+                              <Input
+                                type="number"
+                                value={set.reps}
+                                on:input={(e) => updateSet(exercise.exercise_id, setIndex, 'reps', parseInt(e.currentTarget.value) || 0)}
+                                class="w-20"
+                                min="0"
+                                step="1"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            {/if}
           {/if}
 
           <!-- Session Controls -->
           <div class="flex justify-between items-center pt-4 border-t">
             <div class="flex-1 mr-4">
-              <Label>Session Notes</Label>
+              <Label for="notes">Session Notes</Label>
               <Textarea
+                id="notes"
                 bind:value={notes}
-                placeholder="Add any notes about your workout..."
-                rows="3"
-                class="mt-2"
                 on:change={createOrUpdateLog}
+                placeholder="Add notes about your workout session..."
+                rows="3"
               />
             </div>
-            <div class="flex flex-col space-y-2">
-              <button 
-                type="button"
-                class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                on:click={() => window.location.reload()}
+            {#if showCompleteButton}
+              <button
+                class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                on:click={completeWorkout}
+                disabled={loading}
               >
-                Cancel Session
+                Complete Workout
               </button>
-              {#if showCompleteButton}
-                <button 
-                  type="button"
-                  class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-                  disabled={loading}
-                  on:click={completeWorkout}
-                >
-                  {#if loading}
-                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Saving...
-                  {:else}
-                    Complete Session
-                  {/if}
-                </button>
-              {/if}
-            </div>
+            {/if}
           </div>
         </CardContent>
       {/if}
     </Card>
   {/if}
-</div> 
+</div>
+
+<style>
+  input[type="checkbox"] {
+    @apply h-4 w-4;
+  }
+
+  :global(.dark) input[type="checkbox"] {
+    @apply bg-background border-input;
+  }
+</style>

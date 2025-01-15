@@ -1,7 +1,7 @@
 from typing import List, Optional, Union, Dict, Any
 from uuid import UUID
 from sqlalchemy.orm import Session
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import json
 
 from app.crud.base import CRUDBase
@@ -77,6 +77,17 @@ class CRUDWorkoutLog(CRUDBase[WorkoutLog, WorkoutLogCreate, WorkoutLogUpdate]):
             .all()
         )
 
+    def get_ongoing_log(self, db: Session, user_id: UUID) -> Optional[WorkoutLog]:
+        """Get the user's ongoing workout log"""
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.user_id == user_id,
+                self.model.status == "ongoing"
+            )
+            .first()
+        )
+
     def create_with_user(
         self, db: Session, *, obj_in: WorkoutLogCreate, user_id: UUID
     ) -> WorkoutLog:
@@ -94,6 +105,40 @@ class CRUDWorkoutLog(CRUDBase[WorkoutLog, WorkoutLogCreate, WorkoutLogUpdate]):
         db.commit()
         db.refresh(db_obj)
         return db_obj
+
+    def create_from_template(
+        self,
+        db: Session,
+        *,
+        user_id: UUID,
+        template_id: UUID
+    ) -> WorkoutLog:
+        """Create a new workout log from a template"""
+        template = workout_templates.get(db, id=template_id)
+        if not template:
+            raise ValueError(f"Template {template_id} not found")
+
+        # Initialize exercises with completed status and empty sets
+        exercises = []
+        for ex in template.exercises:
+            exercises.append({
+                **ex,
+                "completed": False,
+                "sets": []
+            })
+
+        log = WorkoutLog(
+            user_id=user_id,
+            template_id=template_id,
+            exercises=exercises,
+            status="ongoing",
+            date=datetime.now().date(),
+            start_time=datetime.now()
+        )
+        db.add(log)
+        db.commit()
+        db.refresh(log)
+        return log
 
     def update(
         self,

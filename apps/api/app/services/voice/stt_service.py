@@ -1,3 +1,31 @@
+"""
+Speech-to-Text Service Module
+
+This module handles the conversion of audio data to text using OpenAI's Whisper model.
+
+Components:
+1. STTService: Main class for transcription
+2. Audio Processing: Handles various audio formats and preprocessing
+
+Flow:
+1. Audio data is received in webm format
+2. Audio is preprocessed if needed (format conversion, noise reduction)
+3. Transcription is performed using Whisper
+4. Text is returned for command processing
+
+TODO:
+1. Add support for multiple languages and accents
+2. Implement noise reduction and audio preprocessing
+3. Add streaming transcription for real-time feedback
+4. Implement wake word detection
+5. Add confidence scores for transcriptions
+6. Handle background noise in gym environments
+7. Add support for multiple audio formats
+8. Implement fallback transcription service
+9. Add transcription caching for common phrases
+10. Implement proper error handling for audio issues
+"""
+
 from typing import BinaryIO
 import openai
 from app.core.config import settings

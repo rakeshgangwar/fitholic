@@ -1,3 +1,32 @@
+"""
+Text-to-Speech Service Module
+
+This module handles the conversion of text responses to audio using ElevenLabs' TTS model.
+
+Components:
+1. TTSService: Main class for speech synthesis
+2. Voice Configuration: Settings for voice characteristics
+3. Audio Processing: Post-processing and format conversion
+
+Flow:
+1. Text response is received from command processor
+2. Voice and style parameters are selected
+3. Audio is generated using TTS model
+4. Audio is post-processed and returned to client
+
+TODO:
+1. Add support for multiple voices and accents
+2. Implement emotion-aware speech synthesis
+3. Add support for SSML markup for better prosody
+4. Implement audio caching for common responses
+5. Add support for multiple audio formats
+6. Implement streaming audio response
+7. Add voice customization options
+8. Implement fallback TTS service
+9. Add proper error handling for synthesis issues
+10. Implement adaptive speaking rate based on context
+"""
+
 from typing import Optional
 import httpx
 from app.core.config import settings
