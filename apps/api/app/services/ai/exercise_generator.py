@@ -3,6 +3,8 @@ from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_community.tools import YouTubeSearchTool
+
+from app.agents.llm_config import get_llm
 from app.core.config import settings
 from app.schemas.exercise import ExerciseCreate
 from fastapi import HTTPException
@@ -73,11 +75,7 @@ async def generate_exercise_with_ai(
     Generate exercise details using Google's Generative AI with structured output.
     """
     try:
-        model = ChatOpenAI(
-            model="gpt-4o",
-            temperature=0.7,
-            api_key=settings.OPENAI_API_KEY
-        )
+        model = get_llm(workflow_type="exercise_generation")
 
         # Format the prompt inputs
         prompt_inputs = {

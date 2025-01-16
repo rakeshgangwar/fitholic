@@ -4,6 +4,7 @@ from langchain_core.language_models import BaseLLM
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
+from langchain_mistralai import ChatMistralAI
 from app.core.config import settings
 
 class BaseLLMConfig(BaseModel):
@@ -29,6 +30,11 @@ class AnthropicConfig(BaseLLMConfig):
     """Configuration for Anthropic models"""
     provider: Literal["anthropic"] = "anthropic"
     model_name: str = "claude-3-opus-20240229"
+
+class MistralConfig(BaseLLMConfig):
+    """Configuration for Google's Mistral model"""
+    provider: Literal["mistral"] = "mistral"
+    model_name: str = "mistral"
 
 LLMConfig = GeminiConfig | OpenAIConfig | AnthropicConfig
 
@@ -62,15 +68,23 @@ class LLMFactory:
                 top_p=config.top_p,
                 api_key=settings.ANTHROPIC_API_KEY
             )
+        elif isinstance(config, MistralConfig):
+            return ChatMistralAI(
+                model=config.model_name,
+                temperature=config.temperature,
+                max_output_tokens=config.max_tokens,
+                top_p=config.top_p,
+                api_key=settings.MISTRAL_API_KEY
+            )
         else:
             raise ValueError(f"Unsupported LLM provider: {config.provider}")
 
 # Workflow-specific LLM configurations
 WORKFLOW_CONFIGS = {
-    "workout_generation": OpenAIConfig(
-        model_name="gpt-4o",
+    "workout_generation": MistralConfig(
+        model_name="mistral-large-latest",
         temperature=0.7,  # Good for creative but structured output
-        max_tokens=2000   # Longer context for detailed workout plans
+        max_tokens=2000   # Longer context for detailed exercise details
     ),
     "form_analysis": AnthropicConfig(
         temperature=0.3,  # Lower temperature for more precise analysis
@@ -90,6 +104,11 @@ WORKFLOW_CONFIGS = {
         model_name="gpt-4o",
         temperature=0.7,  # Balanced temperature for general chat
         max_tokens=1000   # Standard message length
+    ),
+    "exercise_generation": MistralConfig(
+        model_name="mistral-large-latest",
+        temperature=0.7,  # Good for creative but structured output
+        max_tokens=2000   # Longer context for detailed exercise details
     )
 }
 
