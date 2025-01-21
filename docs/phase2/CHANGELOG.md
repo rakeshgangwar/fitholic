@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.15] - 2025-01-21
+
+### Changed
+- Enhanced workout status management:
+  - Modified workout log status to include "scheduled", "ongoing", and "completed" states
+  - Updated database schema to make start_time nullable for scheduled workouts
+  - Improved status transitions:
+    - Workouts are created as "scheduled" with no start_time
+    - Start_time is set when workout status changes to "ongoing"
+    - End_time is required for "completed" status
+  - Enhanced validation rules for each status state
+  - Updated frontend to handle new status workflow
+
+### Fixed
+- Fixed workout scheduling to properly handle future workouts
+- Fixed start_time handling in workout logs to align with status states
+- Fixed validation for workout status transitions
+
 ## [2.0.14] - 2025-01-15
 
 ### Added

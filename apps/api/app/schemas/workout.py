@@ -62,9 +62,9 @@ class WorkoutExerciseLog(BaseModel):
 class WorkoutLogBase(BaseModel):
     template_id: Optional[UUID] = None
     date: date
-    start_time: datetime
+    start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
-    status: Literal["ongoing", "completed"] = "ongoing"
+    status: Literal["scheduled", "ongoing", "completed"] = "scheduled"
     duration: Optional[int] = None
     notes: Optional[str] = None
     exercises: List[WorkoutExerciseLog]
@@ -76,6 +76,11 @@ class WorkoutLogBase(BaseModel):
                 raise ValueError("Completed workouts must have an end time")
             if any(not e.completed for e in values.get('exercises', [])):
                 raise ValueError("Cannot complete workout with incomplete exercises")
+        elif v == "ongoing":
+            if not values.get('start_time'):
+                raise ValueError("Ongoing workouts must have a start time")
+            if values.get('end_time'):
+                raise ValueError("Ongoing workouts cannot have an end time")
         return v
 
 class WorkoutLogCreate(WorkoutLogBase):
@@ -83,7 +88,7 @@ class WorkoutLogCreate(WorkoutLogBase):
 
 class WorkoutLogUpdate(BaseModel):
     end_time: Optional[datetime] = None
-    status: Optional[Literal["ongoing", "completed"]] = None
+    status: Optional[Literal["scheduled", "ongoing", "completed"]] = None
     duration: Optional[int] = None
     notes: Optional[str] = None
     exercises: Optional[List[WorkoutExerciseLog]] = None

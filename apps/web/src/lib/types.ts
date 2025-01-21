@@ -44,9 +44,12 @@ export interface WorkoutLog {
   log_id: string;
   user_id: string;
   template_id?: string;
+  start_time: string;
+  end_time?: string;
   date: string;
   duration?: number;
   notes?: string;
+  status: 'scheduled' | 'ongoing' | 'completed';
   exercises: WorkoutExerciseLog[];
   created_at: string;
   updated_at: string;

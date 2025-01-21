@@ -2,7 +2,7 @@ from typing import List, Optional, Literal
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
-from datetime import date
+from datetime import date, datetime
 from pydantic import BaseModel, Field
 
 from app.core.deps import get_db, get_current_user
@@ -329,4 +329,28 @@ async def generate_workout(
         raise HTTPException(
             status_code=500,
             detail=f"Workout generation failed: {str(e)}"
-        ) 
+        )
+
+@router.post("/logs/{log_id}/start", response_model=WorkoutLog)
+def start_workout(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    log_id: UUID,
+) -> WorkoutLog:
+    """
+    Start a scheduled workout.
+    """
+    current_log = workout_logs.get(db=db, id=log_id)
+    if not current_log:
+        raise HTTPException(status_code=404, detail="Workout log not found")
+    if current_log.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    if current_log.status != "scheduled":
+        raise HTTPException(status_code=400, detail="Only scheduled workouts can be started")
+
+    return workout_logs.update(
+        db=db,
+        db_obj=current_log,
+        obj_in={"status": "ongoing", "start_time": datetime.now()}
+    ) 

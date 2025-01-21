@@ -5,6 +5,7 @@
   import type { WorkoutLog, WorkoutTemplate } from '$lib/types';
   import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
   import { Alert, AlertDescription } from "$lib/components/ui/alert";
+  import { toast } from "svelte-sonner";
   import { 
     format, 
     startOfMonth, 
@@ -23,12 +24,11 @@
     startWorkout: WorkoutLog & { template?: WorkoutTemplate }
   }>();
 
-  export let onStartWorkout: (log: WorkoutLog & { template?: WorkoutTemplate }) => void;
-
   let workoutLogs: (WorkoutLog & { template?: WorkoutTemplate })[] = [];
   let loading = false;
   let error: string | null = null;
   let currentMonth = new Date();
+  let monthWorkouts: { date: Date; workouts: WorkoutLog[] }[] = [];
 
   onMount(() => {
     loadWorkoutLogs();
@@ -105,6 +105,40 @@
     loadWorkoutLogs();
   }
 
+  function startWorkoutForToday() {
+    const today = new Date();
+    const todayStr = format(today, 'yyyy-MM-dd');
+    // Find today's workout from monthWorkouts
+    const todayWorkouts = monthWorkouts.find(day => 
+      format(day.date, 'yyyy-MM-dd') === todayStr
+    )?.workouts || [];
+    console.log(todayWorkouts);
+
+    if (todayWorkouts.length > 0) {
+      // Use the first scheduled workout for today
+      console.log("Starting workout for today:", todayWorkouts[0]);
+      dispatch('startWorkout', todayWorkouts[0]);
+    } else {
+      // Show toast message for no scheduled workout
+      toast.error("No workout scheduled for today.");
+      
+      // Create a new workout if none scheduled
+      // const newWorkout: WorkoutLog = {
+      //   log_id: crypto.randomUUID(),
+      //   user_id: '',
+      //   template_id: undefined,
+      //   date: todayStr,
+      //   start_time: today.toISOString(),
+      //   exercises: [],
+      //   end_time: undefined,
+      //   duration: undefined,
+      //   notes: undefined
+      // };
+      // console.log('Starting new workout for today:', newWorkout);
+      // onStartWorkout(newWorkout);
+    }
+  }
+
   $: monthWorkouts = eachDayOfInterval({
     start: startOfWeek(startOfMonth(currentMonth)),
     end: endOfWeek(endOfMonth(currentMonth))
@@ -136,6 +170,12 @@
     <div class="flex items-center justify-between">
       <CardTitle>Workout Calendar</CardTitle>
       <div class="flex gap-2">
+        <button 
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2"
+          on:click={startWorkoutForToday}
+        >
+          Start Today's Workout
+        </button>
         <button 
           class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
           on:click={previousMonth}
@@ -184,7 +224,7 @@
                 <button 
                   class="text-xs p-1 rounded cursor-pointer w-full text-left
                     {isWorkoutCompleted(workout) ? 'bg-green-500/20 hover:bg-green-500/30' : 'bg-primary/20 hover:bg-primary/30'}"
-                  on:click={() => onStartWorkout(workout)}
+                  on:click={() => dispatch('startWorkout', workout)}
                 >
                   <div class="truncate">
                     {#if workout.template}

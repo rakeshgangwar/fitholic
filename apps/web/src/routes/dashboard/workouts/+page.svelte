@@ -5,21 +5,22 @@
   import WorkoutSummary from '$lib/components/workouts/WorkoutSummary.svelte';
   import WorkoutGenerator from '$lib/components/workouts/WorkoutGenerator.svelte';
   import VoiceWorkoutLogger from '$lib/components/workouts/VoiceWorkoutLogger.svelte';
-  import type { WorkoutTemplate } from '$lib/types';
+  import type { WorkoutLog, WorkoutTemplate } from '$lib/types';
   import { api } from '$lib/api';
   import { Tabs, TabsList, TabsTrigger, TabsContent } from "$lib/components/ui/tabs";
   import { Alert, AlertDescription } from "$lib/components/ui/alert";
   import { format } from 'date-fns';
   import { Popover, PopoverTrigger, PopoverContent } from "$lib/components/ui/popover";
   import { Calendar } from "$lib/components/ui/calendar";
-  import type { DateValue } from "$lib/components/ui/calendar";
   import WorkoutCalendar from '$lib/components/workouts/WorkoutCalendar.svelte';
   import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
 
-  let activeTab = 'sessions';
   let sessions: WorkoutTemplate[] = [];
   let loading = false;
   let error: string | null = null;
+  $: activeTab = $page.url.searchParams.get('tab') || 'sessions';
   let selectedSession: WorkoutTemplate | null = null;
   let generating = false;
   let showGenerator = false;
@@ -74,7 +75,7 @@
   }
 
   function handleLogSuccess() {
-    activeTab = 'history';
+    goto('?tab=history', { replaceState: true });
   }
 
   async function addToCalendar(event: CustomEvent<WorkoutTemplate>) {
@@ -83,20 +84,15 @@
   }
 
   async function handleDateSelect(date: CalendarDate) {
-    console.log('Selected date:', date);
     if (!selectedTemplate || !date) return;
-    console.log('Adding session to calendar:', selectedTemplate);
 
     try {
       error = null;
       const jsDate = new Date(date.year, date.month - 1, date.day);
-      console.log('JavaScript date:', jsDate);
-      console.log(selectedTemplate.template_id, format(jsDate, 'yyyy-MM-dd'));
-      selectedTemplate.exercises.map(ex => (console.log(ex)))
       const workoutLog = {
         template_id: selectedTemplate.template_id,
         date: format(jsDate, 'yyyy-MM-dd'),
-        start_time: new Date().toISOString(),
+        status: 'scheduled',
         exercises: selectedTemplate.exercises.map(ex => ({
           exercise_id: ex.exercise_id,
           sets: Array(ex.sets).fill(null).map(() => ({
@@ -108,25 +104,43 @@
         }))
       };
 
-      console.log('Workout log:', workoutLog);
-
       await api.post('/workouts/logs', workoutLog);
       showDatePicker = false;
       selectedTemplate = null;
-      selectedDate = null;
-      activeTab = 'calendar';
+      selectedDate = today(getLocalTimeZone());
+      goto('?tab=calendar', { replaceState: true });
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to add workout to calendar';
     }
   }
 
-  function handleStartWorkout(event: CustomEvent<WorkoutLog & { template?: WorkoutTemplate }>) {
+  async function handleStartWorkout(event: CustomEvent<WorkoutLog & { template?: WorkoutTemplate }>) {
     const workoutLog = event.detail;
-    if (workoutLog.template_id && workoutLog.template) {
-      selectedSession = workoutLog.template;
-      activeTab = 'log';
-    } else {
-      error = 'Template not found for this workout';
+    
+    try {
+      // Start the workout if it's scheduled
+      if (workoutLog.status === 'scheduled') {
+        await api.post(`/workouts/logs/${workoutLog.log_id}/start`);
+      }
+
+      // Set the selected session and navigate to log tab
+      if (workoutLog.template_id && workoutLog.template) {
+        selectedSession = workoutLog.template;
+      } else {
+        selectedSession = {
+          template_id: '',
+          name: 'Custom Workout',
+          description: '',
+          difficulty: 'beginner',
+          exercises: [],
+          created_by: '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      }
+      goto('?tab=log', { replaceState: true });
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Failed to start workout';
     }
   }
 </script>
@@ -164,7 +178,7 @@
     />
   {:else}
     <div class="bg-card text-card-foreground rounded-lg shadow">
-      <Tabs value={activeTab} onValueChange={(value: string) => activeTab = value} class="w-full">
+      <Tabs value={activeTab} onValueChange={(value) => goto(`?tab=${value}`, { replaceState: true })} class="w-full">
         <TabsList class="grid w-full grid-cols-5">
           <TabsTrigger value="sessions" class="flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -209,7 +223,7 @@
         </TabsContent>
 
         <TabsContent value="calendar" class="p-6">
-          <WorkoutCalendar onStartWorkout={handleStartWorkout} />
+          <WorkoutCalendar on:startWorkout={handleStartWorkout} />
         </TabsContent>
 
         <TabsContent value="log" class="p-6">
