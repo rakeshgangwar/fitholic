@@ -92,6 +92,9 @@
   
   <Card class="w-full max-w-md">
     <CardHeader class="space-y-1">
+      <div class="flex justify-center">
+        <img src="/path/to/logo.png" alt="Logo" class="h-12 w-12" />
+      </div>
       <CardTitle class="text-2xl font-bold text-center">Welcome back</CardTitle>
       <CardDescription class="text-center">
         Sign in to your account to continue
@@ -153,4 +156,4 @@
       </div>
     </CardFooter>
   </Card>
-</div> 
+</div>
